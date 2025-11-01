@@ -7,6 +7,8 @@
   # Use https://search.nixos.org/packages to find packages
   packages = [
     # pkgs.go
+    pkgs.docker
+    pkgs.docker-client
     pkgs.apt
     pkgs.python311
     pkgs.python311Packages.pip
