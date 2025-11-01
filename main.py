@@ -9,13 +9,16 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from groq import Groq
+from dotenv import load_dotenv
 
+
+
+load_dotenv()
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
-
 # Securely get API key from environment variable
 # Make sure to set the GROQ_API_KEY environment variable in your deployment environment.
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
@@ -92,7 +95,7 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_json({"sender": "Cortexa", "text": "Initiating collaborative debate..."})
 
             debate_id = str(uuid.uuid4())
-            models = random.sample(preferred_models, 3)
+            models = random.sample(available_models, 3)
             
             # Model 1: The Opener
             model1_request = models[0]
