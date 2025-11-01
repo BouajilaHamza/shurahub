@@ -7,6 +7,8 @@
   # Use https://search.nixos.org/packages to find packages
   packages = [
     # pkgs.go
+    pkgs.service  
+    pkgs.sudo
     pkgs.docker
     pkgs.docker-client
     pkgs.apt
