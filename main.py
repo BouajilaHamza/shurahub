@@ -20,8 +20,8 @@ templates = Jinja2Templates(directory="templates")
 # Make sure to set the GROQ_API_KEY environment variable in your deployment environment.
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Define preferred models
-preferred_models = ["llama-3.1-8b-instant", "gemma2-9b-it", "mixtral-8x7b-32768"]
+# Define available models
+available_models = ["moonshotai/kimi-k2-instruct-0905", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b","llama-3.3-70b-versatile"]
 LOG_FILE = "debate_log.jsonl"
 
 @app.get("/", response_class=HTMLResponse)
