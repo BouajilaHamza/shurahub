@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: radial-gradient(circle, #2c313a, #1a1d21);
+    color: #e0e0e0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #ffffff;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #00c6ff;
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.back-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+#debate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.debate {
+    background-color: rgba(30, 33, 37, 0.85);
+    border-radius: 16px;
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.debate h2 {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #ffffff;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+.prompt {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.prompt strong {
+    color: #00c6ff;
+}
+
+.response {
+    padding-left: 15px;
+    margin: 20px 0;
+    border-left: 3px solid;
+}
+
+.opener { border-color: #98c379; }
+.critiquer { border-color: #56b6c2; }
+.synthesizer { border-color: #c678dd; }
+
+.response strong {
+    font-weight: 700;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.ratings {
+    margin-top: 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.star-rating {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.star {
+    font-size: 28px;
+    cursor: pointer;
+    color: #4a4f58;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.star:hover {
+    transform: scale(1.2);
+}
+
+.star.selected {
+    color: #e5c07b;
+}
