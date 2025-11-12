@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shurahub - The Future of AI Collaboration</title>
+    <title>Shurahub - Debate the AIs. Discover the Golden Answer.</title>
     <link rel="stylesheet" href="/static/css/globals.css">
     <link rel="stylesheet" href="/static/css/landing.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,24 +15,29 @@
     <div id="background-animation"></div>
     <div class="page-container">
         <header class="main-header">
-            <div class="logo">Shurahub</div>
+            <div class="logo-container">
+                <div class="logo">Shurahub</div>
+                <div class="tagline">Where AIs debate. Truth wins.</div>
+            </div>
             <nav class="main-nav">
-                <a href="#how-it-works">How It Works</a>
+                <a href="#how-it-works">Why AIs Disagree</a>
                 <a href="/review">Debate Archive</a>
             </nav>
         </header>
 
         <main>
             <section class="hero">
-                <h1 class="hero-title">Stop Guessing. Start Debating.</h1>
-                <p class="hero-subtitle">Get objective, multi-perspective answers to your critical technology questions. We make AIs argue so you get the best possible answer.</p>
-                <div class="lead-capture">
-                  <p class="lead-capture-promo">Free for the first 10 responders</p>
-                  <div class="input-group">
-                    <input type="email" placeholder="your@email.com" id="early-access-email">
-                    <button id="lead-submit-button">Get My Free Debate</button>
-                  </div>
-                  <small>No spam. Only insights.</small>
+                <h1 class="hero-title">Debate the AIs.<br>Discover the <strong>Golden Answer</strong>.</h1>
+                <blockquote class="hero-subtitle">
+                    Every AI was trained on different data.<br>
+                    Every AI <em>thinks</em> it’s right.<br><br>
+                    <strong>Shurahub doesn’t pick one.</strong><br>
+                    We make them <strong>fight for it</strong> — live, in public, with evidence.<br><br>
+                    You vote. They defend.<br>
+                    Only the strongest answer survives.
+                </blockquote>
+                <div class="cta-container">
+                    <a href="/chat" class="cta-button">Start a Debate →</a>
                 </div>
             </section>
 
@@ -51,32 +56,53 @@
             </section>
 
             <section id="how-it-works" class="how-it-works-section">
-                <h2 class="section-title">A Symphony of Synthesis</h2>
-                <div class="steps-container">
-                    <div class="step">
-                        <div class="step-icon">1</div>
-                        <h3>The Opener</h3>
-                        <p>One model initiates the conversation with a foundational response.</p>
+                <h2 class="section-title">Why AIs Disagree (And Why That’s Good)</h2>
+                <div class="comparison-container">
+                    <div class="comparison-column">
+                        <h3>Like Humans</h3>
+                        <ul>
+                            <li>A New Yorker and a Texan see gun laws differently.</li>
+                            <li>Experience shapes opinion.</li>
+                            <li>Debate reveals blind spots.</li>
+                        </ul>
                     </div>
-                    <div class="step">
-                        <div class="step-icon">2</div>
-                        <h3>The Critic</h3>
-                        <p>A second model challenges assumptions, identifies flaws, and offers alternative perspectives.</p>
-                    </div>
-                    <div class="step">
-                        <div class="step-icon">3</div>
-                        <h3>The Judge</h3>
-                        <p>A final model synthesizes the debate, resolving conflicts to deliver a nuanced, comprehensive final answer.</p>
+                    <div class="comparison-column">
+                        <h3>Like AIs</h3>
+                        <ul>
+                            <li>GPT sees the world through the 2021 internet. Claude sees it through Anthropic’s safety lens.</li>
+                            <li><strong>Training data shapes answers.</strong></li>
+                            <li><strong>Debate reveals model bias.</strong></li>
+                        </ul>
                     </div>
                 </div>
+                <h3 class="section-closing">Shurahub turns disagreement into wisdom.</h3>
             </section>
         </main>
 
         <footer class="main-footer">
-            <p>&copy; 2024 Shurahub. All Rights Reserved. A new era of AI awaits.</p>
+            <p>&copy; 2024 Shurahub. All Rights Reserved. <a href="#" id="how-it-works-modal-trigger">Curious how we pick the Golden Answer?</a></p>
         </footer>
     </div>
+
+    <!-- How It Works Modal -->
+    <div id="how-it-works-modal" class="modal-container">
+        <div class="modal-content">
+            <button id="modal-close-button" class="modal-close-button">&times;</button>
+            <h3>Our Secret Sauce</h3>
+            <p>
+                While the exact models and algorithms are a trade secret, our process is straightforward:
+            </p>
+            <ol>
+                <li><strong>The Opener</strong>: One AI provides the initial response.</li>
+                <li><strong>The Critiquer</strong>: A second AI, prompted to be skeptical, challenges the opener's logic and facts.</li>
+                <li><strong>The Synthesizer</strong>: A third, "judge" AI analyzes the debate and provides a final, synthesized "Golden Answer."</li>
+            </ol>
+            <p>
+                Our voting and weighting algorithms then refine this process over time. It’s not just a system; it’s a meritocracy of ideas.
+            </p>
+        </div>
+    </div>
+
     <script src="/static/js/landing.js"></script>
-    <script src="/static/js/lead.js"></script>
 </body>
 </html>

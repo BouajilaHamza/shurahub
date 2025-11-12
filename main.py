@@ -25,7 +25,6 @@ templates = Jinja2Templates(directory="templates")
 # --- API Clients and Configuration ---
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 available_models = ["moonshotai/kimi-k2-instruct-0905", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b","llama-3.3-70b-versatile"]
-LEADS_FILE = "leads.csv"
 
 # --- Database Initialization and Migration ---
 @app.on_event("startup")
@@ -68,26 +67,6 @@ async def rate_debate_in_db(request: Request):
     except Exception as e:
         print(f"Error updating rating: {e}")
         return JSONResponse(content={"status": "error", "message": "Failed to update rating"}, status_code=500)
-
-@app.post("/api/leads")
-async def capture_lead(request: Request):
-    """Captures a new lead and saves it to a CSV file."""
-    data = await request.json()
-    email = data.get("email")
-    if not email:
-        return JSONResponse(content={"status": "error", "message": "Email is required"}, status_code=400)
-
-    timestamp = datetime.utcnow().isoformat()
-    file_exists = os.path.exists(LEADS_FILE)
-    
-    with open(LEADS_FILE, "a", newline="") as f:
-        writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow(["timestamp", "email"])
-        writer.writerow([timestamp, email])
-        
-    return JSONResponse(content={"status": "success"})
-
 
 # --- Core Debate Logic ---
 

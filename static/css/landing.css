@@ -35,11 +35,24 @@ body {
     padding: 30px 0;
 }
 
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
 .logo {
     font-size: 1.5em;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.5px;
+}
+
+.tagline {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin-left: 15px;
+    border-left: 1px solid var(--border);
+    padding-left: 15px;
 }
 
 .main-nav a {
@@ -74,62 +87,29 @@ body {
     margin: 20px auto 40px;
     color: var(--text-primary);
     line-height: 1.6;
-}
-
-.lead-capture {
-    max-width: 500px;
-    margin: 0 auto;
+    border: none;
     text-align: center;
 }
 
-.lead-capture-promo {
-    font-size: 0.9em;
-    font-weight: 500;
-    color: var(--accent-gold);
-    margin-bottom: 10px;
+.cta-container {
+    margin-top: 40px;
 }
 
-.input-group {
-    display: flex;
-    gap: 10px;
-}
-
-#early-access-email {
-    flex-grow: 1;
-    padding: 12px 18px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background-color: var(--bg-container);
-    color: var(--text-primary);
-    font-size: 1em;
-}
-
-#early-access-email:focus {
-    outline: none;
-    border-color: var(--accent-gold);
-}
-
-#lead-submit-button {
-    padding: 12px 24px;
+.cta-button {
+    padding: 16px 32px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--accent-gold);
     color: var(--bg-primary);
-    font-size: 1em;
+    font-size: 1.1em;
     font-weight: 700;
     cursor: pointer;
+    text-decoration: none;
     transition: background-color 0.3s ease;
 }
 
-#lead-submit-button:hover {
+.cta-button:hover {
     background: var(--accent-hover);
-}
-
-.lead-capture small {
-    display: block;
-    margin-top: 10px;
-    font-size: 0.8em;
-    color: var(--text-secondary);
 }
 
 .tech-logos {
@@ -173,32 +153,38 @@ body {
     padding: 80px 0;
 }
 
-.steps-container {
+.comparison-container {
     display: flex;
-    justify-content: space-between;
-    gap: 30px;
-}
-
-.step {
+    justify-content: space-around;
+    gap: 40px;
     background-color: var(--bg-container);
-    padding: 30px;
+    padding: 40px;
     border-radius: 10px;
-    text-align: left;
-    flex: 1;
     border: 1px solid var(--border);
 }
 
-.step-icon {
-    font-size: 1.2em;
-    font-weight: 700;
-    color: var(--accent-gold);
-    margin-bottom: 15px;
+.comparison-column h3 {
+    color: var(--text-primary);
+    margin-bottom: 20px;
 }
 
-.step h3 {
-    font-size: 1.3em;
-    color: var(--text-primary);
+.comparison-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.comparison-column li {
     margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.section-closing {
+    text-align: center;
+    font-size: 1.4em;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-top: 60px;
 }
 
 .main-footer {
@@ -209,23 +195,63 @@ body {
     color: var(--text-secondary);
 }
 
-.toast-notification {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100%);
-    background-color: var(--accent-gold);
-    color: var(--bg-primary);
-    padding: 15px 25px;
-    border-radius: 8px;
-    font-size: 1em;
+.main-footer a {
+    color: var(--accent-gold);
+    text-decoration: none;
     font-weight: 500;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.toast-notification.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+/* --- Modal Styles --- */
+.modal-container {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-container.show {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--bg-container);
+    color: var(--text-primary);
+    padding: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    font-size: 1.8em;
+    font-weight: 700;
+}
+
+.modal-content ol {
+    padding-left: 20px;
+}
+
+.modal-content li {
+    margin-bottom: 15px;
+    line-height: 1.6;
 }
