@@ -208,3 +208,24 @@ body {
     border-top: 1px solid var(--border);
     color: var(--text-secondary);
 }
+
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    background-color: var(--accent-gold);
+    color: var(--bg-primary);
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}

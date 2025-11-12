@@ -1,7 +1,6 @@
 
 import asyncio
 import random
-import json
 import uuid
 import os
 import csv
@@ -13,17 +12,30 @@ from fastapi.staticfiles import StaticFiles
 from groq import Groq
 from dotenv import load_dotenv
 
+# Custom database module
+from backend import database
+
 load_dotenv()
 app = FastAPI()
 
+# --- Static Files and Templates ---
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
 templates = Jinja2Templates(directory="templates")
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
+# --- API Clients and Configuration ---
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 available_models = ["moonshotai/kimi-k2-instruct-0905", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b","llama-3.3-70b-versatile"]
-LOG_FILE = "debate_log.jsonl"
 LEADS_FILE = "leads.csv"
+
+# --- Database Initialization and Migration ---
+@app.on_event("startup")
+def startup_event():
+    """On startup, initialize the database and migrate old data if necessary."""
+    database.initialize_db()
+    database.migrate_from_jsonl()
+
+
+# --- HTML Serving Endpoints ---
 
 @app.get("/", response_class=HTMLResponse)
 async def read_landing(request: Request):
@@ -37,36 +49,29 @@ async def read_chat(request: Request):
 async def read_review(request: Request):
     return templates.TemplateResponse("review.html", {"request": request})
 
+
+# --- API Endpoints ---
+
 @app.get("/debates")
-async def get_debates():
-    debates = []
-    try:
-        with open(LOG_FILE, "r") as f:
-            for line in f:
-                debates.append(json.loads(line))
-    except FileNotFoundError:
-        pass
+async def get_debates_from_db():
+    """Retrieves all debates from the SQLite database."""
+    debates = database.get_all_debates()
     return JSONResponse(content=debates)
 
 @app.post("/rate")
-async def rate_debate(request: Request):
+async def rate_debate_in_db(request: Request):
+    """Updates the rating for a debate in the SQLite database."""
     data = await request.json()
-    debate_id = data["debate_id"]
-    rater = data["rater"]
-    rating = data["rating"]
-    updated_lines = []
-    with open(LOG_FILE, "r") as f:
-        for line in f:
-            entry = json.loads(line)
-            if entry["debate_id"] == debate_id:
-                entry["ratings"][rater] = rating
-            updated_lines.append(json.dumps(entry) + "\n")
-    with open(LOG_FILE, "w") as f:
-        f.writelines(updated_lines)
-    return JSONResponse(content={"status": "success"})
+    try:
+        database.update_rating(data["debate_id"], data["rater"], data["rating"])
+        return JSONResponse(content={"status": "success"})
+    except Exception as e:
+        print(f"Error updating rating: {e}")
+        return JSONResponse(content={"status": "error", "message": "Failed to update rating"}, status_code=500)
 
 @app.post("/api/leads")
 async def capture_lead(request: Request):
+    """Captures a new lead and saves it to a CSV file."""
     data = await request.json()
     email = data.get("email")
     if not email:
@@ -78,13 +83,16 @@ async def capture_lead(request: Request):
     with open(LEADS_FILE, "a", newline="") as f:
         writer = csv.writer(f)
         if not file_exists:
-            writer.writerow(["timestamp", "email"]) # Write header
+            writer.writerow(["timestamp", "email"])
         writer.writerow([timestamp, email])
         
     return JSONResponse(content={"status": "success"})
 
 
+# --- Core Debate Logic ---
+
 async def get_bot_response(model, conversation_history):
+    """Gets a response from a specified Groq model."""
     print(f"\n--- Requesting model: {model} ---")
     try:
         chat_completion = await asyncio.to_thread(
@@ -98,10 +106,13 @@ async def get_bot_response(model, conversation_history):
         return response_content, response_model
     except Exception as e:
         print(f"Error getting response from {model}: {e}")
-        return f"Sorry, I encountered an error with the {model} model.", model
+        # Fallback to a default model to ensure the debate can continue
+        return f"Sorry, I encountered an error with the {model} model.", "gemma-7b-it" 
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    """Handles the WebSocket connection for the real-time debate."""
     await websocket.accept()
     try:
         while True:
@@ -111,39 +122,47 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_json({"sender": "Shurahub", "text": "Initiating collaborative debate..."})
 
             debate_id = str(uuid.uuid4())
-            models = random.sample(available_models, 3)
+            # Ensure we have at least 3 models, even if the list is smaller
+            models_to_use = (random.sample(available_models, 3) 
+                           if len(available_models) >= 3 
+                           else available_models * (3 // len(available_models)) + available_models[:3 % len(available_models)])
+
+
+            # --- The Debate ---
             
-            model1_request = models[0]
-            await websocket.send_json({"type": "typing", "sender": model1_request})
-            history1 = [{"role": "user", "content": user_message}]
-            response1, model1_response = await get_bot_response(model1_request, history1)
-            await websocket.send_json({"sender": model1_response, "text": response1})
+            # 1. The Opener
+            opener_model_req = models_to_use[0]
+            await websocket.send_json({"type": "typing", "sender": opener_model_req})
+            opener_history = [{"role": "user", "content": user_message}]
+            opener_response, opener_model_res = await get_bot_response(opener_model_req, opener_history)
+            await websocket.send_json({"sender": opener_model_res, "text": opener_response})
 
-            model2_request = models[1]
-            await websocket.send_json({"type": "typing", "sender": model2_request})
-            critique_prompt = f'''Your colleague, {model1_response}, has responded to the user. Your task is to critique their response and offer a better, more refined alternative. Directly address their points.\n\nUser's query: "{user_message}"\n\n{model1_response}'s response: "{response1}"'''
-            history2 = [{"role": "user", "content": critique_prompt}]
-            response2, model2_response = await get_bot_response(model2_request, history2)
-            await websocket.send_json({"sender": model2_response, "text": response2})
+            # 2. The Critiquer
+            critiquer_model_req = models_to_use[1]
+            await websocket.send_json({"type": "typing", "sender": critiquer_model_req})
+            critique_prompt = f'''Your colleague, {opener_model_res}, has responded to the user. Your task is to critique their response and offer a better, more refined alternative. Directly address their points.\n\nUser's query: "{user_message}"\n\n{opener_model_res}'s response: "{opener_response}"'''
+            critiquer_history = [{"role": "user", "content": critique_prompt}]
+            critiquer_response, critiquer_model_res = await get_bot_response(critiquer_model_req, critiquer_history)
+            await websocket.send_json({"sender": critiquer_model_res, "text": critiquer_response})
 
-            model3_request = models[2]
-            await websocket.send_json({"type": "typing", "sender": model3_request})
-            synthesis_prompt = f'''You are the final judge in a debate between two AI colleagues, {model1_response} and {model2_response}, who are responding to a user's query. Your task is to synthesize their discussion and provide the single best possible answer to the user.\n\nUser's Query: "{user_message}"\n\n**The Debate:**\n\n**{model1_response} said:** "{response1}"\n\n**{model2_response} critiqued and added:** "{response2}"\n\nNow, provide the definitive, final answer for the user. Be direct and concise.'''
-            history3 = [{"role": "user", "content": synthesis_prompt}]
-            response3, model3_response = await get_bot_response(model3_request, history3)
-            await websocket.send_json({"sender": model3_response, "text": f"**Final Verdict:** {response3}"})
+            # 3. The Synthesizer (Judge)
+            synthesizer_model_req = models_to_use[2]
+            await websocket.send_json({"type": "typing", "sender": synthesizer_model_req})
+            synthesis_prompt = f'''You are the final judge in a debate between two AI colleagues, {opener_model_res} and {critiquer_model_res}, who are responding to a user's query. Your task is to synthesize their discussion and provide the single best possible answer to the user.\n\nUser's Query: "{user_message}"\n\n**The Debate:**\n\n**{opener_model_res} said:** "{opener_response}"\n\n**{critiquer_model_res} critiqued and added:** "{critiquer_response}"\n\nNow, provide the definitive, final answer for the user. Be direct and concise.'''
+            synthesizer_history = [{"role": "user", "content": synthesis_prompt}]
+            synthesizer_response, synthesizer_model_res = await get_bot_response(synthesizer_model_req, synthesizer_history)
+            await websocket.send_json({"sender": synthesizer_model_res, "text": f"**Final Verdict:** {synthesizer_response}"})
 
+            # --- Log debate to the database ---
             log_entry = {
                 "debate_id": debate_id,
                 "timestamp": datetime.utcnow().isoformat(),
                 "user_prompt": user_message,
-                "opener": {"model": model1_response, "response": response1},
-                "critiquer": {"model": model2_response, "response": response2},
-                "synthesizer": {"model": model3_response, "response": response3},
-                "ratings": {"opener": None, "final": None}
+                "opener": {"model": opener_model_res, "response": opener_response},
+                "critiquer": {"model": critiquer_model_res, "response": critiquer_response},
+                "synthesizer": {"model": synthesizer_model_res, "response": synthesizer_response},
             }
-            with open(LOG_FILE, "a") as f:
-                f.write(json.dumps(log_entry) + "\n")
+            database.add_debate(log_entry)
 
     except WebSocketDisconnect:
         print("\nClient disconnected.")
@@ -151,6 +170,7 @@ async def websocket_endpoint(websocket: WebSocket):
         error_message = f"An unexpected error occurred: {e}"
         print(error_message)
         try:
+            # Try to send an error message to the client before closing
             await websocket.send_json({"sender": "Shurahub", "text": f"Sorry, a system error occurred: {e}"})
         except:
-            pass
+            pass # The connection might already be closed
