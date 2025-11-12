@@ -1,159 +1,167 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     const debatesList = document.getElementById('debates-list');
+    const searchInput = document.getElementById('search-input');
+    const sortSelect = document.getElementById('sort-select');
 
-    /**
-     * Shows a loading message or an error state.
-     * @param {string} message The message to display.
-     * @param {boolean} isError If true, displays the message as an error.
-     */
+    let allDebates = []; // Store all debates locally
+    let debounceTimer;
+
+    // --- Utility Functions ---
+
+    function debounce(func, delay) {
+        return function(...args) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
     function showState(message, isError = false) {
-        debatesList.innerHTML = ''; // Clear previous state
+        debatesList.innerHTML = '';
         const stateElement = document.createElement('div');
         stateElement.className = isError ? 'error-message' : 'loading-message';
         stateElement.textContent = message;
         debatesList.appendChild(stateElement);
     }
 
-    /**
-     * Creates a star rating component.
-     * @param {string} debateId The ID of the debate.
-     * @param {string} rater The role being rated (e.g., 'opener', 'final').
-     * @returns {HTMLElement} The container for the star rating.
-     */
-    function createStarRating(debateId, rater) {
-        const ratingContainer = document.createElement('div');
-        ratingContainer.className = 'star-rating';
+    function createElement(tag, className, textContent) {
+        const element = document.createElement(tag);
+        element.className = className;
+        if (textContent) element.textContent = textContent;
+        return element;
+    }
+
+    // --- Rating Functions ---
+
+    function createStarRating(debateId, rater, currentRating) {
+        const ratingContainer = createElement('div', 'star-rating');
         ratingContainer.dataset.debateId = debateId;
         ratingContainer.dataset.rater = rater;
 
         for (let i = 1; i <= 5; i++) {
-            const star = document.createElement('span');
-            star.className = 'star';
+            const star = createElement('span', 'star');
             star.dataset.value = i;
-            star.innerHTML = '&#9733;'; // Star character
+            star.innerHTML = '&#9733;';
             star.addEventListener('click', () => {
                 rateDebate(debateId, rater, i);
                 updateStars(ratingContainer, i);
             });
             ratingContainer.appendChild(star);
         }
+
+        if (currentRating) {
+            updateStars(ratingContainer, currentRating);
+        }
         return ratingContainer;
     }
 
-    /**
-     * Updates the visual state of the stars.
-     * @param {HTMLElement} container The star rating container.
-     * @param {number} rating The selected rating.
-     */
     function updateStars(container, rating) {
         container.querySelectorAll('.star').forEach(star => {
             star.classList.toggle('selected', star.dataset.value <= rating);
         });
     }
 
-    /**
-     * Sends the rating to the server.
-     * @param {string} debateId The ID of the debate.
-     * @param {string} rater The role being rated.
-     * @param {number} rating The rating value.
-     */
     function rateDebate(debateId, rater, rating) {
         fetch('/rate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ debate_id: debateId, rater, rating }),
-        }).catch(error => console.error('Failed to submit rating:', error)); // Basic error logging
+        }).catch(error => console.error('Failed to submit rating:', error));
     }
 
-    /**
-     * Creates an element with a specified tag, class, and text content.
-     * @param {string} tag The HTML tag for the element.
-     * @param {string} className The CSS class name.
-     * @param {string} [textContent] The text content of the element.
-     * @returns {HTMLElement} The created element.
-     */
-    function createElement(tag, className, textContent) {
-        const element = document.createElement(tag);
-        element.className = className;
-        if (textContent) {
-            element.textContent = textContent;
+    // --- Rendering Logic ---
+
+    function renderDebates() {
+        localStorage.setItem('reviewSearchTerm', searchInput.value);
+        localStorage.setItem('reviewSortBy', sortSelect.value);
+
+        debatesList.innerHTML = '';
+        let debatesToRender = [...allDebates];
+
+        const searchTerm = searchInput.value.toLowerCase();
+        if (searchTerm) {
+            debatesToRender = debatesToRender.filter(debate =>
+                [debate.user_prompt, debate.opener?.response, debate.critiquer?.response, debate.synthesizer?.response]
+                .some(text => text?.toLowerCase().includes(searchTerm))
+            );
         }
-        return element;
+
+        const sortBy = sortSelect.value;
+        debatesToRender.sort((a, b) => {
+            if (sortBy === 'newest') return new Date(b.timestamp) - new Date(a.timestamp);
+            if (sortBy === 'oldest') return new Date(a.timestamp) - new Date(b.timestamp);
+            if (sortBy === 'rating') {
+                const ratingA = (a.opener_rating || 0) + (a.final_rating || 0);
+                const ratingB = (b.opener_rating || 0) + (b.final_rating || 0);
+                return ratingB - ratingA;
+            }
+            return 0;
+        });
+
+        if (debatesToRender.length === 0) {
+            showState('No debates match your criteria.');
+            return;
+        }
+        
+        const resultCount = createElement('div', 'result-count', `${debatesToRender.length} debate(s) found.`);
+        debatesList.appendChild(resultCount);
+
+        debatesToRender.forEach(renderSingleDebate);
     }
 
-    /**
-     * Renders a single debate into the list.
-     * @param {object} debate The debate object to render.
-     */
-    function renderDebate(debate) {
+    function renderSingleDebate(debate) {
         const debateElement = createElement('div', 'debate');
+        debateElement.innerHTML = `
+            <h2>Debate ID: ${debate.debate_id}</h2>
+            <p class="timestamp">${new Date(debate.timestamp).toLocaleString()}</p>
+            <div class="prompt"><strong>You said:</strong> ${debate.user_prompt}</div>
+        `;
 
-        const title = createElement('h2', '', `Debate ID: ${debate.debate_id}`);
-
-        const userPromptContainer = createElement('div', 'prompt');
-        const userPromptStrong = createElement('strong', '', 'You said: ');
-        userPromptContainer.appendChild(userPromptStrong);
-        userPromptContainer.append(debate.user_prompt);
-
-        debateElement.append(title, userPromptContainer);
-
-        // Render each agent's response
         const responses = [
-            { role: 'opener', data: debate.opener },
+            { role: 'opener', data: debate.opener, rating: debate.opener_rating },
             { role: 'critiquer', data: debate.critiquer },
-            { role: 'synthesizer', data: debate.synthesizer, finalName: 'Final Verdict' },
+            { role: 'synthesizer', data: debate.synthesizer, finalName: 'Final Verdict', rating: debate.final_rating },
         ];
 
-        responses.forEach(({ role, data, finalName }) => {
-            if (!data) return; // Don't render if data is missing
+        responses.forEach(({ role, data, finalName, rating }) => {
+            if (!data) return;
 
             const responseDiv = createElement('div', `response ${role}`);
-            const strong = createElement('strong', '', `${finalName || role.charAt(0).toUpperCase() + role.slice(1)} (${data.model}):`);
-            const responseText = createElement('p', '', data.response);
-
-            responseDiv.append(strong, responseText);
-
-            // Add rating section for opener and synthesizer
+            responseDiv.innerHTML = `<strong>${finalName || role.charAt(0).toUpperCase() + role.slice(1)} (${data.model}):</strong><p>${data.response}</p>`;
+            
             if (role === 'opener' || role === 'synthesizer') {
+                const rater = role === 'synthesizer' ? 'final' : 'opener';
                 const ratingsDiv = createElement('div', 'ratings');
-                const ratingsStrong = createElement('strong', '', `Rate this ${finalName || 'opening'}: `);
-                const starRating = createStarRating(debate.debate_id, role === 'synthesizer' ? 'final' : 'opener');
-                ratingsDiv.append(ratingsStrong, starRating);
+                ratingsDiv.appendChild(createElement('strong', '', `Rate this ${finalName || 'opening'}: `));
+                ratingsDiv.appendChild(createStarRating(debate.debate_id, rater, rating));
                 responseDiv.appendChild(ratingsDiv);
             }
-
             debateElement.appendChild(responseDiv);
         });
 
         debatesList.appendChild(debateElement);
     }
 
-    /**
-     * Main function to fetch and render all debates.
-     */
+    // --- Initialization ---
+
     async function loadDebates() {
         showState('Loading debates...');
         try {
             const response = await fetch('/debates');
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const debates = await response.json();
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            allDebates = await response.json();
 
-            debatesList.innerHTML = ''; // Clear loading message
-            if (debates.length === 0) {
-                showState('No debates found.');
-                return;
-            }
-            debates.forEach(renderDebate);
-
+            searchInput.value = localStorage.getItem('reviewSearchTerm') || '';
+            sortSelect.value = localStorage.getItem('reviewSortBy') || 'newest';
+            
+            renderDebates();
         } catch (error) {
             console.error('Failed to load debates:', error);
             showState('Failed to load debates. Please try again later.', true);
         }
     }
 
-    // Initial load
+    searchInput.addEventListener('input', debounce(renderDebates, 300));
+    sortSelect.addEventListener('change', renderDebates);
+
     loadDebates();
 });

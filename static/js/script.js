@@ -7,16 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let ws;
     let currentShurahubMessage;
+    let typingIndicatorTimeout;
 
     function connect() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        ws = new WebSocket(wsUrl);
 
         ws.onopen = () => console.log('WebSocket connection established');
         ws.onmessage = (event) => handleServerMessage(JSON.parse(event.data));
         ws.onclose = () => {
             console.log('WebSocket connection closed. Reconnecting...');
-            setTimeout(connect, 3000);
+            setTimeout(connect, 3000); // Try to reconnect every 3 seconds
         };
         ws.onerror = (error) => {
             console.error('WebSocket error:', error);
@@ -25,8 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleServerMessage(data) {
+        clearTimeout(typingIndicatorTimeout);
+        removeTypingIndicator();
+
+        if (data.type === 'typing') {
+            showTypingIndicator(data.sender);
+            return;
+        }
+
         if (data.sender === 'Shurahub' && data.text === 'Initiating collaborative debate...') {
-            // Create a new message container for the whole interaction
             const messageElement = shurahubMessageTemplate.content.cloneNode(true);
             chatMessages.appendChild(messageElement);
             currentShurahubMessage = chatMessages.lastElementChild;
@@ -38,14 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const debateContent = currentShurahubMessage.querySelector('.debate-content');
             const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
 
-            // Final Verdict (Synthesizer)
             if (data.text.startsWith('**Final Verdict:**')) {
                 const answer = data.text.replace('**Final Verdict:**', '').trim();
                 finalAnswer.innerHTML = marked.parse(answer);
                 const viewDebateButton = currentShurahubMessage.querySelector('.view-debate-button');
-                viewDebateButton.style.display = 'block'; // Show the button
-
-            } else { // Opener and Critiquer
+                viewDebateButton.style.display = 'block';
+            } else {
                 const debateEntry = document.createElement('div');
                 debateEntry.classList.add('debate-entry');
                 const sender = `<b>${data.sender}:</b>`;
@@ -74,15 +81,37 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessages.appendChild(messageElement);
     }
 
+    function showTypingIndicator(sender) {
+        let typingIndicator = document.getElementById('typing-indicator');
+        if (!typingIndicator) {
+            typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typing-indicator';
+            typingIndicator.classList.add('message', 'typing-indicator');
+            chatMessages.appendChild(typingIndicator);
+        }
+        typingIndicator.innerHTML = `<em>${sender} is typing...</em>`;
+        scrollToBottom();
+
+        // Fallback to remove indicator if no new message arrives
+        typingIndicatorTimeout = setTimeout(removeTypingIndicator, 5000);
+    }
+
+    function removeTypingIndicator() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+
+
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Event listener for the 'View Debate' button (using event delegation)
     chatMessages.addEventListener('click', (event) => {
         if (event.target.classList.contains('view-debate-button')) {
             const button = event.target;
-            const debateContainer = button.previousElementSibling;
+            const debateContainer = button.parentElement.querySelector('.debate-container');
             if (debateContainer.style.display === 'none') {
                 debateContainer.style.display = 'block';
                 button.textContent = 'Hide Debate';
@@ -101,5 +130,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    connect();
+    connect(); // Connect to the WebSocket on page load
 });

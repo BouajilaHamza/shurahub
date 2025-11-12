@@ -12,10 +12,34 @@
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 </head>
 <body>
+    <header class="main-header">
+        <div class="logo-container">
+            <div class="logo">Shurahub</div>
+            <div class="tagline">Where AIs debate. Truth wins.</div>
+        </div>
+        <nav class="main-nav">
+            <a href="/#how-it-works">Why AIs Disagree</a>
+            <a href="/review">Debate Archive</a>
+            {% if user %}
+                <a href="/chat" class="nav-button cta-button">Dashboard</a>
+                <a href="/logout" class="nav-button">Logout</a>
+            {% else %}
+                <a href="/login" class="nav-button login-button">Login</a>
+                <a href="/register" class="nav-button register-button">Register</a>
+            {% endif %}
+        </nav>
+    </header>
     <div class="review-container">
         <header class="review-header">
             <h1>Debate Archive</h1>
-            <a href="/" class="back-link">New Debate</a>
+            <div class="controls-container">
+                <input type="search" id="search-input" placeholder="Search debates...">
+                <select id="sort-select">
+                    <option value="newest">Sort by Newest</option>
+                    <option value="oldest">Sort by Oldest</option>
+                    <option value="rating">Sort by Rating</option>
+                </select>
+            </div>
         </header>
         <main id="debates-list" class="debates-list"></main>
     </div>

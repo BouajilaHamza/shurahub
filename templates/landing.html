@@ -22,6 +22,13 @@
             <nav class="main-nav">
                 <a href="#how-it-works">Why AIs Disagree</a>
                 <a href="/review">Debate Archive</a>
+                {% if user %}
+                    <a href="/chat" class="nav-button cta-button">Dashboard</a>
+                    <a href="/logout" class="nav-button">Logout</a>
+                {% else %}
+                    <a href="/login" class="nav-button login-button">Login</a>
+                    <a href="/register" class="nav-button register-button">Register</a>
+                {% endif %}
             </nav>
         </header>
 
@@ -37,7 +44,7 @@
                     Only the strongest answer survives.
                 </blockquote>
                 <div class="cta-container">
-                    <a href="/chat" class="cta-button">Start a Debate →</a>
+                     <a href="{% if user %}/chat{% else %}/login{% endif %}" class="cta-button">Start a Debate →</a>
                 </div>
             </section>
 
@@ -102,7 +109,6 @@
             </p>
         </div>
     </div>
-
     <script src="/static/js/landing.js"></script>
 </body>
 </html>

@@ -1,0 +1,95 @@
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+}
+
+.auth-form {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    background-color: var(--bg-container);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.auth-form h2 {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.auth-form p {
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 18px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1em;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.auth-button {
+    width: 100%;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.auth-button:hover {
+    background: var(--accent-hover);
+}
+
+.auth-switch {
+    margin-top: 20px;
+}
+
+.auth-switch a {
+    color: var(--accent-gold);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.error-message {
+    color: #e53e3e; /* A standard error red */
+    margin-top: 20px;
+    font-weight: 500;
+}
+
+.success-message {
+    color: #34d399; /* A nice green */
+    margin-top: 20px;
+    font-weight: 500;
+}
