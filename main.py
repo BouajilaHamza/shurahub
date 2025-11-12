@@ -1,8 +1,10 @@
+
 import asyncio
 import random
 import json
 import uuid
 import os
+import csv
 from datetime import datetime
 from fastapi import FastAPI, WebSocket, Request, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -11,21 +13,17 @@ from fastapi.staticfiles import StaticFiles
 from groq import Groq
 from dotenv import load_dotenv
 
-
-
 load_dotenv()
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
-# Securely get API key from environment variable
-# Make sure to set the GROQ_API_KEY environment variable in your deployment environment.
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Define available models
 available_models = ["moonshotai/kimi-k2-instruct-0905", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b","llama-3.3-70b-versatile"]
 LOG_FILE = "debate_log.jsonl"
+LEADS_FILE = "leads.csv"
 
 @app.get("/", response_class=HTMLResponse)
 async def read_landing(request: Request):
@@ -67,6 +65,24 @@ async def rate_debate(request: Request):
         f.writelines(updated_lines)
     return JSONResponse(content={"status": "success"})
 
+@app.post("/api/leads")
+async def capture_lead(request: Request):
+    data = await request.json()
+    email = data.get("email")
+    if not email:
+        return JSONResponse(content={"status": "error", "message": "Email is required"}, status_code=400)
+
+    timestamp = datetime.utcnow().isoformat()
+    file_exists = os.path.exists(LEADS_FILE)
+    
+    with open(LEADS_FILE, "a", newline="") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["timestamp", "email"]) # Write header
+        writer.writerow([timestamp, email])
+        
+    return JSONResponse(content={"status": "success"})
+
 
 async def get_bot_response(model, conversation_history):
     print(f"\n--- Requesting model: {model} ---")
@@ -92,27 +108,24 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_json()
             user_message = data["text"]
             print(f"\n--- User Message ---: {user_message}")
-            await websocket.send_json({"sender": "Cortexa", "text": "Initiating collaborative debate..."})
+            await websocket.send_json({"sender": "Shurahub", "text": "Initiating collaborative debate..."})
 
             debate_id = str(uuid.uuid4())
             models = random.sample(available_models, 3)
             
-            # Model 1: The Opener
             model1_request = models[0]
             await websocket.send_json({"type": "typing", "sender": model1_request})
             history1 = [{"role": "user", "content": user_message}]
             response1, model1_response = await get_bot_response(model1_request, history1)
             await websocket.send_json({"sender": model1_response, "text": response1})
 
-            # Model 2: The Critiquer/Refiner
             model2_request = models[1]
             await websocket.send_json({"type": "typing", "sender": model2_request})
-            critique_prompt = f'''Your colleague, {model1_response}, has responded to the user. Your task is to critique their response and offer a better, more refined alternative. Directly address their points.\n\nUser's query: "{user_message}"\n\n{model1_response}'s response: "{response1}"''' 
+            critique_prompt = f'''Your colleague, {model1_response}, has responded to the user. Your task is to critique their response and offer a better, more refined alternative. Directly address their points.\n\nUser's query: "{user_message}"\n\n{model1_response}'s response: "{response1}"'''
             history2 = [{"role": "user", "content": critique_prompt}]
             response2, model2_response = await get_bot_response(model2_request, history2)
             await websocket.send_json({"sender": model2_response, "text": response2})
 
-            # Model 3: The Synthesizer/Judge
             model3_request = models[2]
             await websocket.send_json({"type": "typing", "sender": model3_request})
             synthesis_prompt = f'''You are the final judge in a debate between two AI colleagues, {model1_response} and {model2_response}, who are responding to a user's query. Your task is to synthesize their discussion and provide the single best possible answer to the user.\n\nUser's Query: "{user_message}"\n\n**The Debate:**\n\n**{model1_response} said:** "{response1}"\n\n**{model2_response} critiqued and added:** "{response2}"\n\nNow, provide the definitive, final answer for the user. Be direct and concise.'''
@@ -138,6 +151,6 @@ async def websocket_endpoint(websocket: WebSocket):
         error_message = f"An unexpected error occurred: {e}"
         print(error_message)
         try:
-            await websocket.send_json({"sender": "Cortexa", "text": f"Sorry, a system error occurred: {e}"})
+            await websocket.send_json({"sender": "Shurahub", "text": f"Sorry, a system error occurred: {e}"})
         except:
             pass

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cortexa - Collaborative AI</title>
+    <title>Shurahub - Command Center</title>
+    <link rel="stylesheet" href="/static/css/globals.css">
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,22 +13,54 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            Cortexa Debate Chamber
-        </div>
-        <div class="chat-messages" id="chat-messages">
-            <!-- Messages will be appended here -->
-        </div>
-        <div class="chat-input">
-            <input type="text" id="prompt-input" placeholder="Ask Cortexa...">
-            <button id="send-button">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24px" height="24px">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                </svg>
-            </button>
-        </div>
+    <div class="command-center">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">Shurahub</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item active">New Debate</a>
+                <a href="/review" class="nav-item">Debate Archive</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#">Settings</a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <div class="chat-messages" id="chat-messages">
+                <!-- Initial state or messages will be appended here -->
+            </div>
+            <div class="chat-input-container">
+                <div class="chat-input">
+                    <input type="text" id="prompt-input" placeholder="Start a new debate (e.g., 'Compare Next.js vs. Astro for a content site')">
+                    <button id="send-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px" height="20px">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
     </div>
+
+    <template id="user-message-template">
+        <div class="message user-message">
+            <div class="message-content"></div>
+        </div>
+    </template>
+
+    <template id="shurahub-message-template">
+        <div class="message shurahub-message">
+            <div class="message-content">
+                <div class="final-answer"></div>
+                <div class="debate-container" style="display: none;">
+                    <div class="debate-content"></div>
+                </div>
+                <button class="view-debate-button">View Debate</button>
+            </div>
+        </div>
+    </template>
+
     <script src="/static/js/script.js"></script>
 </body>
 </html>

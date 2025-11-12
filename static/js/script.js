@@ -2,7 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const promptInput = document.getElementById('prompt-input');
     const sendButton = document.getElementById('send-button');
+    const userMessageTemplate = document.getElementById('user-message-template');
+    const shurahubMessageTemplate = document.getElementById('shurahub-message-template');
+
     let ws;
+    let currentShurahubMessage;
 
     function connect() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -20,90 +24,74 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    function getAvatarInitial(sender) {
-        const s = sender.toLowerCase();
-        if (s.includes('user')) return 'YOU';
-        if (s.includes('gemma')) return 'G2';
-        if (s.includes('llama')) return 'L3';
-        if (s.includes('mixtral')) return 'MX';
-        if (s.includes('qwen')) return 'QW'; 
-        if (s.includes('kimi')) return 'KM';
-        if (s.includes('gpt-oss')) return 'OS';
-        return 'AI';
-    }
-
     function handleServerMessage(data) {
-        document.querySelectorAll('.typing-indicator').forEach(indicator => indicator.remove());
+        if (data.sender === 'Shurahub' && data.text === 'Initiating collaborative debate...') {
+            // Create a new message container for the whole interaction
+            const messageElement = shurahubMessageTemplate.content.cloneNode(true);
+            chatMessages.appendChild(messageElement);
+            currentShurahubMessage = chatMessages.lastElementChild;
+            scrollToBottom();
+            return;
+        }
 
-        const element = data.type === 'typing'
-            ? createTypingIndicator(data.sender)
-            : createMessageElement(data.sender, data.text);
+        if (currentShurahubMessage) {
+            const debateContent = currentShurahubMessage.querySelector('.debate-content');
+            const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
 
-        chatMessages.appendChild(element);
+            // Final Verdict (Synthesizer)
+            if (data.text.startsWith('**Final Verdict:**')) {
+                const answer = data.text.replace('**Final Verdict:**', '').trim();
+                finalAnswer.innerHTML = marked.parse(answer);
+                const viewDebateButton = currentShurahubMessage.querySelector('.view-debate-button');
+                viewDebateButton.style.display = 'block'; // Show the button
+
+            } else { // Opener and Critiquer
+                const debateEntry = document.createElement('div');
+                debateEntry.classList.add('debate-entry');
+                const sender = `<b>${data.sender}:</b>`;
+                const response = marked.parse(data.text);
+                debateEntry.innerHTML = `${sender}<br>${response}`;
+                debateContent.appendChild(debateEntry);
+            }
+        }
         scrollToBottom();
-    }
-
-    function createMessageElement(sender, text) {
-        const messageEl = document.createElement('div');
-        // Use a generic 'ai' class for all non-user messages for styling
-        const senderClass = sender === 'user' ? 'user' : 'ai';
-        messageEl.classList.add('message', senderClass);
-
-        const avatar = document.createElement('div');
-        avatar.classList.add('avatar');
-        // Add a specific class for the model for potential individual styling
-        avatar.classList.add(sender.split('/')[1]); 
-        avatar.textContent = getAvatarInitial(sender);
-        messageEl.appendChild(avatar);
-
-        const contentEl = document.createElement('div');
-        contentEl.classList.add('message-content');
-
-        const senderEl = document.createElement('div');
-        senderEl.classList.add('message-sender');
-        senderEl.textContent = sender === 'user' ? 'You' : sender;
-        contentEl.appendChild(senderEl);
-
-        const textEl = document.createElement('div');
-        textEl.classList.add('message-text');
-        textEl.innerHTML = marked.parse(text);
-        contentEl.appendChild(textEl);
-
-        messageEl.appendChild(contentEl);
-        return messageEl;
-    }
-
-    function createTypingIndicator(sender) {
-        const typingEl = document.createElement('div');
-        typingEl.classList.add('message', 'typing-indicator', 'ai');
-
-        const avatar = document.createElement('div');
-        avatar.classList.add('avatar', sender.split('/')[1]);
-        avatar.textContent = getAvatarInitial(sender);
-        typingEl.appendChild(avatar);
-
-        const contentEl = document.createElement('div');
-        contentEl.classList.add('message-content');
-        contentEl.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
-        typingEl.appendChild(contentEl);
-
-        return typingEl;
     }
 
     function sendMessage() {
         const text = promptInput.value.trim();
         if (text && ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ text }));
-            const messageEl = createMessageElement('user', text);
-            chatMessages.appendChild(messageEl);
+            appendUserMessage(text);
             promptInput.value = '';
             scrollToBottom();
         }
     }
 
+    function appendUserMessage(text) {
+        const messageElement = userMessageTemplate.content.cloneNode(true);
+        const content = messageElement.querySelector('.message-content');
+        content.textContent = text;
+        chatMessages.appendChild(messageElement);
+    }
+
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+
+    // Event listener for the 'View Debate' button (using event delegation)
+    chatMessages.addEventListener('click', (event) => {
+        if (event.target.classList.contains('view-debate-button')) {
+            const button = event.target;
+            const debateContainer = button.previousElementSibling;
+            if (debateContainer.style.display === 'none') {
+                debateContainer.style.display = 'block';
+                button.textContent = 'Hide Debate';
+            } else {
+                debateContainer.style.display = 'none';
+                button.textContent = 'View Debate';
+            }
+        }
+    });
 
     sendButton.addEventListener('click', sendMessage);
     promptInput.addEventListener('keydown', (event) => {

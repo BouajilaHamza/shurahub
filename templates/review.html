@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cortexa - Review</title>
+    <title>Shurahub - Debate Archive</title>
+    <link rel="stylesheet" href="/static/css/globals.css">
     <link rel="stylesheet" href="/static/css/review.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 </head>
 <body>
-    <div class="container">
-        <h1>Debate Review</h1>
-        <a href="/" class="back-link">&larr; Back to Chat</a>
-        <div id="debate-list"></div>
+    <div class="review-container">
+        <header class="review-header">
+            <h1>Debate Archive</h1>
+            <a href="/" class="back-link">New Debate</a>
+        </header>
+        <main id="debates-list" class="debates-list"></main>
     </div>
     <script src="/static/js/review.js"></script>
 </body>
