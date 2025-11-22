@@ -3,11 +3,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy requirements first for better caching
-COPY pyproject.toml .
+COPY backend/pyproject.toml .
 
 RUN pip install uv && uv pip install --system -r pyproject.toml
 # Copy the rest of the application
-COPY . .
+COPY backend/ .
 
 # Expose the port
 EXPOSE 8000
