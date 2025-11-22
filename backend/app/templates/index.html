@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,19 +12,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/static/js/theme.js" defer></script>
 </head>
+
 <body>
     <div class="command-center">
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">Shurahub</div>
+                <button id="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle Theme"
+                    style="margin-left: auto; background: none; border: none; cursor: pointer; color: var(--text-secondary);">
+                    <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                        <!-- Icon set by JS -->
+                    </svg>
+                </button>
             </div>
             <nav class="sidebar-nav">
                 <a href="/" class="nav-item active">New Debate</a>
                 <a href="/review" class="nav-item">Debate Archive</a>
             </nav>
             <div class="sidebar-footer">
-                 <a href="/logout">Logout</a>
+                <a href="/logout">Logout</a>
             </div>
         </aside>
         <main class="main-content">
@@ -32,10 +42,12 @@
             </div>
             <div class="chat-input-container">
                 <div class="chat-input">
-                    <input type="text" id="prompt-input" placeholder="Start a new debate (e.g., 'Compare Next.js vs. Astro for a content site')">
+                    <input type="text" id="prompt-input"
+                        placeholder="Start a new debate (e.g., 'Compare Next.js vs. Astro for a content site')">
                     <button id="send-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px" height="20px">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px"
+                            height="20px">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                         </svg>
                     </button>
                 </div>
@@ -64,4 +76,5 @@
     <script src="/static/js/script.js"></script>
 
 </body>
+
 </html>

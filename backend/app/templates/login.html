@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Shurahub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/globals.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <link rel="stylesheet" href="/static/css/landing.css"> <!-- Reuse toggle styles -->
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="/static/js/theme.js" defer></script>
+</head>
+
+<body>
+    <div id="theme-toggle-wrapper">
+        <button id="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
+            <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <!-- Icon set by JS -->
+            </svg>
+        </button>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">Shurahub</div>
+                <h2>Welcome Back</h2>
+                <p>Enter your credentials to access the command center.</p>
+            </div>
+
+            <form action="/login" method="post">
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" name="email" placeholder="name@example.com" required
+                            autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required
+                            autocomplete="current-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-button">Sign In</button>
+            </form>
+
+            {% if error %}
+            <div class="message error">{{ error }}</div>
+            {% endif %}
+            {% if message %}
+            <div class="message success">{{ message }}</div>
+            {% endif %}
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="/register">Create account</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,23 +11,32 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="/static/js/theme.js" defer></script>
 </head>
+
 <body>
     <header class="main-header">
         <div class="logo-container">
             <div class="logo">Shurahub</div>
-            <div class="tagline">Where AIs debate. Truth wins.</div>
+            <div class="tagline">Decision Intelligence</div>
         </div>
         <nav class="main-nav">
-            <a href="/#how-it-works">Why AIs Disagree</a>
+            <a href="/#how-it-works">How it Works</a>
             <a href="/review">Debate Archive</a>
             {% if user %}
-                <a href="/chat" class="nav-button cta-button">Dashboard</a>
-                <a href="/logout" class="nav-button">Logout</a>
+            <a href="/chat" class="nav-button cta-button">Dashboard</a>
+            <a href="/logout" class="nav-button">Logout</a>
             {% else %}
-                <a href="/login" class="nav-button login-button">Login</a>
-                <a href="/register" class="nav-button register-button">Register</a>
+            <a href="/login" class="nav-button login-button">Login</a>
+            <a href="/register" class="nav-button register-button">Register</a>
             {% endif %}
+            <button id="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle Theme"
+                style="background: none; border: none; cursor: pointer; color: var(--text-secondary); margin-left: 1rem;">
+                <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                    <!-- Icon set by JS -->
+                </svg>
+            </button>
         </nav>
     </header>
     <div class="review-container">
@@ -45,4 +55,5 @@
     </div>
     <script src="/static/js/review.js"></script>
 </body>
+
 </html>

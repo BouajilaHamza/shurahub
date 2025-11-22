@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shurahub - Decision Intelligence Council</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/globals.css">
+    <link rel="stylesheet" href="/static/css/landing.css">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="/static/js/theme.js" defer></script>
+</head>
+
+<body>
+    <div id="background-animation"></div>
+
+    <div class="page-container">
+        <header class="main-header">
+            <div class="logo-container">
+                <div class="logo">Shurahub</div>
+                <div class="tagline">Decision Intelligence</div>
+            </div>
+            <nav class="main-nav">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How it Works</a>
+                <a href="/login" class="nav-link">Login</a>
+                <button id="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
+                    <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Icon set by JS -->
+                    </svg>
+                </button>
+            </nav>
+        </header>
+
+        <main>
+            <section class="hero">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        Stop Guessing.<br>
+                        Start <span class="gradient-text">Deciding.</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        The first AI council that debates <em>for</em> you.
+                        Three advanced models. One definitive truth.
+                    </p>
+                    <div class="cta-container">
+                        <a href="/register" class="cta-button primary">Start Your Council</a>
+                        <a href="#how-it-works" class="cta-button secondary">See How It Works</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="tech-logos">
+                <p class="logos-title">POWERED BY ELITE MODELS</p>
+                <div class="logo-grid">
+                    <!-- Placeholders for model logos or names -->
+                    <span>GPT-4o</span>
+                    <span>Claude 3.5 Sonnet</span>
+                    <span>Llama 3</span>
+                    <span>Mistral Large</span>
+                </div>
+            </section>
+
+            <section id="how-it-works" class="how-it-works-section">
+                <h2 class="section-title">The Boardroom Logic</h2>
+                <div class="comparison-container">
+                    <div class="comparison-column">
+                        <h3>Like Humans</h3>
+                        <ul>
+                            <li>A New Yorker and a Texan see gun laws differently.</li>
+                            <li>Experience shapes opinion.</li>
+                            <li>Debate reveals blind spots.</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-column">
+                        <h3>Like AIs</h3>
+                        <ul>
+                            <li>GPT sees the world through the 2021 internet. Claude sees it through Anthropic’s safety
+                                lens.</li>
+                            <li><strong>Training data shapes answers.</strong></li>
+                            <li><strong>Debate reveals model bias.</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                <h3 class="section-closing">Shurahub turns disagreement into wisdom.</h3>
+            </section>
+        </main>
+
+        <footer class="main-footer">
+            <p>&copy; 2024 Shurahub. All Rights Reserved. <a href="#" id="how-it-works-modal-trigger">Curious how we
+                    pick the Golden Answer?</a></p>
+        </footer>
+    </div>
+
+    <!-- How It Works Modal -->
+    <div id="how-it-works-modal" class="modal-container">
+        <div class="modal-content">
+            <button id="modal-close-button" class="modal-close-button">&times;</button>
+            <h3>Our Secret Sauce</h3>
+            <p>
+                While the exact models and algorithms are a trade secret, our process is straightforward:
+            </p>
+            <ol>
+                <li><strong>The Opener</strong>: One AI provides the initial response.</li>
+                <li><strong>The Critiquer</strong>: A second AI, prompted to be skeptical, challenges the opener's logic
+                    and facts.</li>
+                <li><strong>The Synthesizer</strong>: A third, "judge" AI analyzes the debate and provides a final,
+                    synthesized "Golden Answer."</li>
+            </ol>
+            <p>
+                Our voting and weighting algorithms then refine this process over time. It’s not just a system; it’s a
+                meritocracy of ideas.
+            </p>
+        </div>
+    </div>
+    <script src="/static/js/landing.js"></script>
+</body>
+
+</html>

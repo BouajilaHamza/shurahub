@@ -1,0 +1,56 @@
+from fastapi import APIRouter, Request, Response, Form, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from app.core.config import supabase_client
+import os
+
+router = APIRouter()
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "../../templates"))
+
+def get_user_from_cookie(request: Request) -> dict:
+    session = request.cookies.get("user-session")
+    if not session:
+        return None
+    try:
+        user = supabase_client.auth.get_user(session)
+        return user.user.dict() if user else None
+    except Exception:
+        return None
+
+@router.get("/login", response_class=HTMLResponse)
+async def read_login_get(request: Request, message: str = None):
+    user = get_user_from_cookie(request)
+    if user:
+        return RedirectResponse(url="/chat", status_code=302)
+    return templates.TemplateResponse("login.html", {"request": request, "message": message, "user": None})
+
+@router.post("/login", response_class=HTMLResponse)
+async def read_login_post(request: Request, response: Response, email: str = Form(...), password: str = Form(...)):
+    try:
+        user_session = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
+        response = RedirectResponse(url="/chat", status_code=302)
+        response.set_cookie(key="user-session", value=user_session.session.access_token, httponly=True)
+        return response
+    except Exception as e:
+        return templates.TemplateResponse("login.html", {"request": request, "error": f"Login failed: {e}", "user": None}, status_code=401)
+
+@router.get("/register", response_class=HTMLResponse)
+async def read_register_get(request: Request, error: str = None):
+    user = get_user_from_cookie(request)
+    if user:
+        return RedirectResponse(url="/chat", status_code=302)
+    return templates.TemplateResponse("register.html", {"request": request, "error": error, "user": None})
+
+@router.post("/register")
+async def handle_register(email: str = Form(...), password: str = Form(...)):
+    try:
+        supabase_client.auth.sign_up({"email": email, "password": password})
+        return RedirectResponse(url="/login?message=Registration successful! Please check your email to confirm your account, then log in.", status_code=302)
+    except Exception as e:
+        return RedirectResponse(url=f"/register?error={e}", status_code=302)
+
+@router.get("/logout")
+async def do_logout(request: Request):
+    response = RedirectResponse(url="/", status_code=302)
+    response.delete_cookie(key="user-session")
+    return response
