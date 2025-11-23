@@ -26,12 +26,19 @@
         </button>
     </div>
 
+    <header class="auth-nav" style="position: fixed; top: 20px; left: 20px; z-index: 100;">
+        <a href="/"
+            style="text-decoration: none; color: var(--text-secondary); font-weight: 500; transition: color 0.2s;">
+            ← Back to Home
+        </a>
+    </header>
+
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <div class="logo">
+                <a href="/" class="logo" style="text-decoration: none; color: inherit; display: inline-block;">
                     <img alt="Shurahub Logo" style="height: 56px; width: auto; margin-bottom: 10px;">
-                </div>
+                </a>
                 <h2>Welcome Back</h2>
                 <p>Enter your credentials to access the command center.</p>
             </div>
@@ -72,10 +79,18 @@
             {% endif %}
 
             <div class="auth-footer">
-                <p>Don't have an account? <a href="/register">Create account</a></p>
+                <p>Don't have an account? <a href="/register">Create one</a></p>
             </div>
         </div>
     </div>
+
+    <footer
+        style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: var(--text-secondary); font-size: 0.875rem;">
+        <p>&copy; 2024 Shurahub. All Rights Reserved.</p>
+    </footer>
+
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/auth.js"></script>
 </body>
 
 </html>
