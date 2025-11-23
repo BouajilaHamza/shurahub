@@ -88,3 +88,12 @@ a {
 button {
     font-family: inherit;
 }
+
+/* Logo Theme Switching */
+.logo img {
+    content: url('/static/images/logo-black.svg');
+}
+
+[data-theme="dark"] .logo img {
+    content: url('/static/images/logo-white.svg');
+}
