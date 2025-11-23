@@ -25,7 +25,7 @@ async def read_login_get(request: Request, message: str = None):
     return templates.TemplateResponse("login.html", {"request": request, "message": message, "user": None})
 
 @router.post("/login", response_class=HTMLResponse)
-async def read_login_post(request: Request, response: Response, email: str = Form(...), password: str = Form(...)):
+def read_login_post(request: Request, response: Response, email: str = Form(...), password: str = Form(...)):
     try:
         user_session = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
         response = RedirectResponse(url="/chat", status_code=302)
@@ -42,12 +42,26 @@ async def read_register_get(request: Request, error: str = None):
     return templates.TemplateResponse("register.html", {"request": request, "error": error, "user": None})
 
 @router.post("/register")
-async def handle_register(email: str = Form(...), password: str = Form(...)):
-    try:
-        supabase_client.auth.sign_up({"email": email, "password": password})
-        return RedirectResponse(url="/login?message=Registration successful! Please check your email to confirm your account, then log in.", status_code=302)
-    except Exception as e:
-        return RedirectResponse(url=f"/register?error={e}", status_code=302)
+def handle_register(email: str = Form(...), password: str = Form(...)):
+    import time
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            supabase_client.auth.sign_up({"email": email, "password": password})
+            return RedirectResponse(url="/login?message=Registration successful! Please check your email to confirm your account, then log in.", status_code=302)
+        except Exception as e:
+            error_msg = str(e)
+            # Check for rate limit immediately and don't retry
+            if "rate limit" in error_msg.lower() or "429" in error_msg:
+                friendly_error = "Too many requests. Please wait a minute before trying to sign up again."
+                return RedirectResponse(url=f"/register?error={friendly_error}", status_code=302)
+            
+            # If it's the last attempt, return the error
+            if attempt == max_retries - 1:
+                return RedirectResponse(url=f"/register?error={error_msg}", status_code=302)
+            
+            # Wait before retrying (simple backoff: 1s, 2s)
+            time.sleep(attempt + 1)
 
 @router.get("/logout")
 async def do_logout(request: Request):

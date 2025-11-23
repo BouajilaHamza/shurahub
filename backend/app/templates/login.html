@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/static/css/landing.css"> <!-- Reuse toggle styles -->
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="/static/js/theme.js" defer></script>
+    <script src="/static/js/auth.js" defer></script>
 </head>
 
 <body>
@@ -28,7 +29,11 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <div class="logo">Shurahub</div>
+                <div class="logo">
+                    <img src="/static/images/logo.svg" alt="Shurahub Logo"
+                        style="height: 48px; width: auto; vertical-align: middle; margin-bottom: 10px;">
+                    <br>Shurahub
+                </div>
                 <h2>Welcome Back</h2>
                 <p>Enter your credentials to access the command center.</p>
             </div>
@@ -47,6 +52,14 @@
                     <div class="input-wrapper">
                         <input type="password" id="password" name="password" placeholder="Enter your password" required
                             autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('password', this)"
+                            aria-label="Toggle Password Visibility">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 

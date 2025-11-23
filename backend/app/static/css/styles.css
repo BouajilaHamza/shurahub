@@ -1,5 +1,5 @@
-
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     font-family: 'Inter', sans-serif;
@@ -96,10 +96,53 @@ html, body {
 }
 
 .user-message .message-content {
-    background-color: var(--accent-gold);
-    color: var(--bg-primary);
-    border-radius: 12px 12px 0 12px;
-    padding: 12px 18px;
+    background: var(--bg-card);
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    border-top-left-radius: 4px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.message.user .message-content {
+    background: var(--primary);
+    color: white;
+    border-radius: 16px;
+    border-top-right-radius: 4px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .command-center {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1rem;
+    }
+
+    .sidebar-header .logo {
+        font-size: 1.2rem;
+        padding-bottom: 10px;
+        /* Adjusted for smaller header */
+    }
+
+    .main-content {
+        height: calc(100dvh - 70px);
+        /* Adjust for sidebar header height */
+    }
+
+    .chat-messages {
+        padding: 1rem;
+    }
+
+    .message {
+        max-width: 90%;
+    }
 }
 
 .shurahub-message {
