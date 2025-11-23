@@ -11,7 +11,27 @@ class DebateService:
         if "timestamp" not in debate_data:
             debate_data["timestamp"] = datetime.utcnow().isoformat()
             
-        response = self.client.table("debates").insert(debate_data).execute()
+        # Structure data for JSONB columns if flat structure is passed
+        formatted_data = {
+            "debate_id": debate_data.get("debate_id"),
+            "user_id": debate_data.get("user_id"),
+            "timestamp": debate_data.get("timestamp"),
+            "user_prompt": debate_data.get("user_prompt"),
+            "opener": {
+                "model": debate_data.get("opener_model"),
+                "response": debate_data.get("opener_response")
+            },
+            "critiquer": {
+                "model": debate_data.get("critiquer_model"),
+                "response": debate_data.get("critiquer_response")
+            },
+            "synthesizer": {
+                "model": debate_data.get("synthesizer_model"),
+                "response": debate_data.get("synthesizer_response")
+            }
+        }
+            
+        response = self.client.table("debates").insert(formatted_data).execute()
         return response
 
     def get_all_debates(self):

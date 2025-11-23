@@ -1,29 +1,25 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="320" height="80" viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="core-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" /> <!-- Royal Blue -->
-      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" /> <!-- Cyan -->
+    <!-- Gradient for checkmark -->
+    <linearGradient id="check-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7C3AED" />
+      <stop offset="50%" style="stop-color:#2563EB" />
+      <stop offset="100%" style="stop-color:#06B6D4" />
     </linearGradient>
   </defs>
-
-  <!-- The Hub (Central Core) -->
-  <circle cx="256" cy="256" r="48" fill="url(#core-gradient)" />
-
-  <!-- Top Orbit (Upper part of "S") -->
-  <path 
-    d="M128 256C128 185.3 185.3 128 256 128C326.7 128 384 185.3 384 256" 
-    stroke="url(#core-gradient)" 
-    stroke-width="48" 
-    stroke-linecap="round"
-    transform="rotate(-45 256 256) translate(0 -60)"
-  />
-
-  <!-- Bottom Orbit (Lower part of "S") -->
-  <path 
-    d="M384 256C384 326.7 326.7 384 256 384C185.3 384 128 326.7 128 256" 
-    stroke="url(#core-gradient)" 
-    stroke-width="48" 
-    stroke-linecap="round"
-    transform="rotate(-45 256 256) translate(0 60)"
-  />
+  
+  <!-- Checkmark icon with gradient -->
+  <path d="M20 40 L35 55 L60 25"
+        stroke="url(#check-gradient)"
+        stroke-width="4"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+  
+  <!-- Wordmark - uses currentColor for theme support -->
+  <text x="70" y="52"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="32"
+        font-weight="700"
+        fill="currentColor">Shurahub</text>
 </svg>

@@ -20,9 +20,9 @@ def get_user_from_cookie(request: Request) -> dict:
 @router.get("/login", response_class=HTMLResponse)
 async def read_login_get(request: Request, message: str = None):
     user = get_user_from_cookie(request)
-    if user:
-        return RedirectResponse(url="/chat", status_code=302)
-    return templates.TemplateResponse("login.html", {"request": request, "message": message, "user": None})
+    # if user:
+    #     return RedirectResponse(url="/chat", status_code=302)
+    return templates.TemplateResponse("login.html", {"request": request, "message": message, "user": user})
 
 @router.post("/login", response_class=HTMLResponse)
 def read_login_post(request: Request, response: Response, email: str = Form(...), password: str = Form(...)):
@@ -37,9 +37,9 @@ def read_login_post(request: Request, response: Response, email: str = Form(...)
 @router.get("/register", response_class=HTMLResponse)
 async def read_register_get(request: Request, error: str = None):
     user = get_user_from_cookie(request)
-    if user:
-        return RedirectResponse(url="/chat", status_code=302)
-    return templates.TemplateResponse("register.html", {"request": request, "error": error, "user": None})
+    # if user:
+    #     return RedirectResponse(url="/chat", status_code=302)
+    return templates.TemplateResponse("register.html", {"request": request, "error": error, "user": user})
 
 @router.post("/register")
 def handle_register(email: str = Form(...), password: str = Form(...)):
@@ -51,6 +51,11 @@ def handle_register(email: str = Form(...), password: str = Form(...)):
             return RedirectResponse(url="/login?message=Registration successful! Please check your email to confirm your account, then log in.", status_code=302)
         except Exception as e:
             error_msg = str(e)
+            
+            # Check for existing user
+            if "User already registered" in error_msg or "already registered" in error_msg:
+                 return RedirectResponse(url="/login?message=Account already exists. Please log in.", status_code=302)
+
             # Check for rate limit immediately and don't retry
             if "rate limit" in error_msg.lower() or "429" in error_msg:
                 friendly_error = "Too many requests. Please wait a minute before trying to sign up again."

@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Utility Functions ---
 
     function debounce(func, delay) {
-        return function(...args) {
+        return function (...args) {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => func.apply(this, args), delay);
         };
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchTerm) {
             debatesToRender = debatesToRender.filter(debate =>
                 [debate.user_prompt, debate.opener?.response, debate.critiquer?.response, debate.synthesizer?.response]
-                .some(text => text?.toLowerCase().includes(searchTerm))
+                    .some(text => text?.toLowerCase().includes(searchTerm))
             );
         }
 
@@ -98,10 +98,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (debatesToRender.length === 0) {
-            showState('No debates match your criteria.');
+            if (allDebates.length === 0) {
+                showState('No debates found in the archive yet.');
+                const startButton = createElement('a', 'nav-button cta-button', 'Start New Debate');
+                startButton.href = '/';
+                startButton.style.display = 'inline-block';
+                startButton.style.marginTop = '1rem';
+                debatesList.appendChild(startButton);
+            } else {
+                showState('No debates match your search criteria.');
+            }
             return;
         }
-        
+
         const resultCount = createElement('div', 'result-count', `${debatesToRender.length} debate(s) found.`);
         debatesList.appendChild(resultCount);
 
@@ -127,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const responseDiv = createElement('div', `response ${role}`);
             responseDiv.innerHTML = `<strong>${finalName || role.charAt(0).toUpperCase() + role.slice(1)} (${data.model}):</strong><p>${data.response}</p>`;
-            
+
             if (role === 'opener' || role === 'synthesizer') {
                 const rater = role === 'synthesizer' ? 'final' : 'opener';
                 const ratingsDiv = createElement('div', 'ratings');
@@ -152,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             searchInput.value = localStorage.getItem('reviewSearchTerm') || '';
             sortSelect.value = localStorage.getItem('reviewSortBy') || 'newest';
-            
+
             renderDebates();
         } catch (error) {
             console.error('Failed to load debates:', error);
