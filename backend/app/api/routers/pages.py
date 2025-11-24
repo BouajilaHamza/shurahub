@@ -1,0 +1,25 @@
+from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from app.api.routers.auth import get_user_from_cookie
+import os
+
+router = APIRouter()
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "../../templates"))
+
+@router.get("/", response_class=HTMLResponse)
+async def read_landing(request: Request):
+    user = get_user_from_cookie(request)
+    return templates.TemplateResponse("landing.html", {"request": request, "user": user})
+
+@router.get("/chat", response_class=HTMLResponse)
+async def read_chat(request: Request):
+    user = get_user_from_cookie(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("index.html", {"request": request, "user": user})
+
+@router.get("/review", response_class=HTMLResponse)
+async def read_review(request: Request):
+    user = get_user_from_cookie(request)
+    return templates.TemplateResponse("review.html", {"request": request, "user": user})
