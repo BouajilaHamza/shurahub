@@ -1,182 +1,109 @@
-import sqlite3
-import json
+import logging
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-DATABASE_NAME = "shurahub.db"
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 
-def initialize_db():
-    """Initializes the database and creates the debates table if it doesn't exist."""
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS debates (
-                debate_id TEXT PRIMARY KEY,
-                timestamp TEXT NOT NULL,
-                user_prompt TEXT NOT NULL,
-                opener_model TEXT NOT NULL,
-                opener_response TEXT NOT NULL,
-                critiquer_model TEXT NOT NULL,
-                critiquer_response TEXT NOT NULL,
-                synthesizer_model TEXT NOT NULL,
-                synthesizer_response TEXT NOT NULL,
-                opener_rating INTEGER,
-                final_rating INTEGER
-            )
-        ''')
+from app.core.config import DATABASE_URL, supabase_client
 
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS feedback (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT,
-                message TEXT NOT NULL,
-                category TEXT,
-                created_at TEXT NOT NULL
-            )
-        ''')
 
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS analytics_events (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                event_name TEXT NOT NULL,
-                metadata TEXT,
-                created_at TEXT NOT NULL
-            )
-        ''')
-        conn.commit()
+logger = logging.getLogger(__name__)
 
-def add_debate(debate_data):
-    """Adds a new debate to the database."""
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO debates (
-                debate_id, timestamp, user_prompt,
-                opener_model, opener_response,
-                critiquer_model, critiquer_response,
-                synthesizer_model, synthesizer_response
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            debate_data['debate_id'],
-            debate_data['timestamp'],
-            debate_data['user_prompt'],
-            debate_data['opener']['model'],
-            debate_data['opener']['response'],
-            debate_data['critiquer']['model'],
-            debate_data['critiquer']['response'],
-            debate_data['synthesizer']['model'],
-            debate_data['synthesizer']['response']
-        ))
-        conn.commit()
 
-def update_rating(debate_id, rater, rating):
-    """Updates the rating for a specific debate."""
-    # The rater from the frontend is 'opener' or 'final'
-    rating_column = "opener_rating" if rater == "opener" else "final_rating"
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        cursor = conn.cursor()
-        # Use f-string carefully here, only for the column name which is validated.
-        cursor.execute(f'''
-            UPDATE debates
-            SET {rating_column} = ?
-            WHERE debate_id = ?
-        ''', (rating, debate_id))
-        conn.commit()
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args={"connect_timeout": 5})
 
-def get_all_debates():
-    """Retrieves all debates from the database and formats them for the frontend."""
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM debates ORDER BY timestamp DESC")
-        rows = cursor.fetchall()
 
-        debates = []
-        for row in rows:
-            debates.append({
-                "debate_id": row["debate_id"],
-                "timestamp": row["timestamp"],
-                "user_prompt": row["user_prompt"],
-                "opener": {"model": row["opener_model"], "response": row["opener_response"]},
-                "critiquer": {"model": row["critiquer_model"], "response": row["critiquer_response"]},
-                "synthesizer": {"model": row["synthesizer_model"], "response": row["synthesizer_response"]},
-                "ratings": {"opener": row["opener_rating"], "final": row["final_rating"]}
-            })
-        return debates
+DEBATE_DDL = [
+    """
+    CREATE TABLE IF NOT EXISTS public.debates (
+        debate_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        timestamp TIMESTAMPTZ NOT NULL,
+        user_prompt TEXT NOT NULL,
+        opener JSONB NOT NULL,
+        critiquer JSONB NOT NULL,
+        synthesizer JSONB NOT NULL,
+        opener_rating INTEGER,
+        final_rating INTEGER
+    )
+    """,
+    """CREATE INDEX IF NOT EXISTS idx_debates_user_id ON public.debates(user_id)""",
+]
 
-def migrate_from_jsonl(log_file="debate_log.jsonl"):
-    """Migrates data from the old JSONL file to the SQLite database."""
+
+FEEDBACK_DDL = [
+    """
+    CREATE TABLE IF NOT EXISTS public.feedback (
+        id BIGSERIAL PRIMARY KEY,
+        user_id TEXT,
+        email TEXT,
+        message TEXT NOT NULL,
+        category TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+    """,
+    """CREATE INDEX IF NOT EXISTS idx_feedback_user_id ON public.feedback(user_id)""",
+]
+
+
+ANALYTICS_DDL = [
+    """
+    CREATE TABLE IF NOT EXISTS public.analytics_events (
+        id BIGSERIAL PRIMARY KEY,
+        user_id TEXT,
+        event_name TEXT NOT NULL,
+        metadata JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+    """,
+    """CREATE INDEX IF NOT EXISTS idx_analytics_user_id ON public.analytics_events(user_id)""",
+]
+
+
+def initialize_db() -> None:
+    """Ensure Supabase (Postgres) tables exist before the app starts."""
     try:
-        with sqlite3.connect(DATABASE_NAME) as conn, open(log_file, "r") as f:
-            cursor = conn.cursor()
-            migrated_count = 0
-            for line in f:
-                try:
-                    entry = json.loads(line)
-                    # Check if debate already exists to avoid duplicates
-                    cursor.execute("SELECT 1 FROM debates WHERE debate_id = ?", (entry['debate_id'],))
-                    if cursor.fetchone():
-                        continue
-
-                    cursor.execute('''
-                        INSERT INTO debates (
-                            debate_id, timestamp, user_prompt,
-                            opener_model, opener_response,
-                            critiquer_model, critiquer_response,
-                            synthesizer_model, synthesizer_response,
-                            opener_rating, final_rating
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (
-                        entry.get('debate_id'),
-                        entry.get('timestamp'),
-                        entry.get('user_prompt'),
-                        entry.get('opener', {}).get('model'),
-                        entry.get('opener', {}).get('response'),
-                        entry.get('critiquer', {}).get('model'),
-                        entry.get('critiquer', {}).get('response'),
-                        entry.get('synthesizer', {}).get('model'),
-                        entry.get('synthesizer', {}).get('response'),
-                        entry.get('ratings', {}).get('opener'),
-                        entry.get('ratings', {}).get('final')
-                    ))
-                    migrated_count += 1
-                except (json.JSONDecodeError, KeyError) as e:
-                    print(f"Skipping malformed line in log file: {e}")
-            
-            if migrated_count > 0:
-                conn.commit()
-                print(f"Successfully migrated {migrated_count} debates.")
-            else:
-                print("No new debates to migrate.")
-
-    except FileNotFoundError:
-        print("Log file not found, skipping migration.")
-    except Exception as e:
-        print(f"An error occurred during migration: {e}")
-
-
-def save_feedback_entry(email, message, category=None):
-    """Stores user feedback submissions for later analysis."""
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            '''
-            INSERT INTO feedback (email, message, category, created_at)
-            VALUES (?, ?, ?, ?)
-            ''',
-            (email, message, category, datetime.utcnow().isoformat()),
+        with engine.begin() as connection:
+            for statement in DEBATE_DDL + FEEDBACK_DDL + ANALYTICS_DDL:
+                connection.execute(text(statement))
+    except SQLAlchemyError as exc:
+        logger.warning(
+            "Skipping Supabase table initialization because the database is unreachable: %s",
+            exc,
         )
-        conn.commit()
+    except Exception as exc:  # pragma: no cover - defensive guard
+        logger.exception("Unexpected error while initializing Supabase tables", exc_info=exc)
 
 
-def record_analytics_event(event_name, metadata=None):
-    """Records lightweight analytics events for the landing page."""
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            '''
-            INSERT INTO analytics_events (event_name, metadata, created_at)
-            VALUES (?, ?, ?)
-            ''',
-            (event_name, json.dumps(metadata or {}), datetime.utcnow().isoformat()),
-        )
-        conn.commit()
+def save_feedback_entry(
+    email: Optional[str], message: str, category: Optional[str] = None, user_id: Optional[str] = None
+) -> None:
+    """Store user feedback submissions in Supabase."""
+
+    payload: Dict[str, Any] = {
+        "email": email,
+        "message": message,
+        "category": category,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+
+    if user_id:
+        payload["user_id"] = user_id
+
+    supabase_client.table("feedback").insert(payload).execute()
+
+
+def record_analytics_event(event_name: str, metadata: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None) -> None:
+    """Record lightweight analytics for the landing page."""
+
+    payload: Dict[str, Any] = {
+        "event_name": event_name,
+        "metadata": metadata or {},
+        "created_at": datetime.utcnow().isoformat(),
+    }
+
+    if user_id:
+        payload["user_id"] = user_id
+
+    supabase_client.table("analytics_events").insert(payload).execute()

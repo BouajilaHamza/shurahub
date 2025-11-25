@@ -156,6 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
         showState('Loading debates...');
         try {
             const response = await fetch('/debates');
+            if (response.status === 401) {
+                showState('Please log in to view your debates.');
+                const loginButton = createElement('a', 'nav-button login-button', 'Log in');
+                loginButton.href = '/login';
+                debatesList.appendChild(loginButton);
+                return;
+            }
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             allDebates = await response.json();
 

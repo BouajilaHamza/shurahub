@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from app.services.debate_service import DebateService
+from app.api.routers.auth import get_user_from_cookie
 
 router = APIRouter()
 
@@ -15,10 +16,14 @@ class RateDebateRequest(BaseModel):
     rating: int
 
 @router.get("/debates")
-def get_debates(service: DebateService = Depends(get_debate_service)):
-    """Retrieves all debates from the Supabase database."""
-    debates = service.get_all_debates()
-    return JSONResponse(content=debates)
+def get_debates(request: Request, service: DebateService = Depends(get_debate_service)):
+    """Retrieves the requesting user's debates from Supabase."""
+    user = get_user_from_cookie(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    debates = service.get_all_debates(user["id"])
+    return JSONResponse(content=debates or [])
 
 @router.post("/rate")
 def rate_debate(data: RateDebateRequest, service: DebateService = Depends(get_debate_service)):

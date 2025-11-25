@@ -34,9 +34,15 @@ class DebateService:
         response = self.client.table("debates").insert(formatted_data).execute()
         return response
 
-    def get_all_debates(self):
-        """Retrieves all debates from Supabase, ordered by timestamp."""
-        response = self.client.table("debates").select("*").order("timestamp", desc=True).execute()
+    def get_all_debates(self, user_id: str):
+        """Retrieves all debates for a specific user from Supabase, ordered by timestamp."""
+        response = (
+            self.client.table("debates")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("timestamp", desc=True)
+            .execute()
+        )
         return response.data
 
     def update_rating(self, debate_id: str, rater: str, rating: int):
