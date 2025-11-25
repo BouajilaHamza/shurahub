@@ -1,0 +1,38 @@
+{% if ga_measurement_id %}
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', '{{ ga_measurement_id }}');
+
+    // Custom event tracking helper
+    function trackEvent(eventName, eventParams = {}) {
+        if (typeof gtag !== 'undefined') {
+            gtag('event', eventName, eventParams);
+        }
+    }
+
+    // Track clicks on elements with data-track attribute
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-track]').forEach(function (element) {
+            element.addEventListener('click', function () {
+                const eventName = this.getAttribute('data-track');
+                const eventParams = {
+                    element_id: this.id || '',
+                    element_class: this.className || '',
+                    element_text: this.textContent.trim().substring(0, 100)
+                };
+
+                // Add custom parameters from data attributes
+                if (this.hasAttribute('data-plan')) {
+                    eventParams.plan = this.getAttribute('data-plan');
+                }
+
+                trackEvent(eventName, eventParams);
+            });
+        });
+    });
+</script>
+{% endif %}
