@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/static/css/landing.css">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="/static/js/theme.js" defer></script>
+    {% include 'analytics.html' %}
 </head>
 
 <body>
@@ -21,7 +22,8 @@
     <div class="page-container">
         <header class="main-header">
             <div class="logo-container">
-                <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                <a href="/" class="logo"
+                    style="text-decoration: none; color: inherit; display: flex; align-items: center;">
                     <img id="logo-mark" class="logo-mark" src="/static/images/logo-black.svg" alt="Shurahub Logo">
                 </a>
                 <div class="tagline">Decision Intelligence</div>
@@ -59,7 +61,8 @@
                     </p>
                     <div class="cta-container">
                         <a href="/register" class="cta-button primary" data-track="cta_register">Start Your Council</a>
-                        <a href="#how-it-works" class="cta-button secondary" data-track="cta_how_it_works">See How It Works</a>
+                        <a href="#how-it-works" class="cta-button secondary" data-track="cta_how_it_works">See How It
+                            Works</a>
                     </div>
                 </div>
             </section>
@@ -69,15 +72,18 @@
                 <div class="feature-grid">
                     <article class="feature-card">
                         <h3>Responsive command center</h3>
-                        <p>Fluid layouts, thumb-friendly tap targets, and navigation that collapses elegantly on phones.</p>
+                        <p>Fluid layouts, thumb-friendly tap targets, and navigation that collapses elegantly on phones.
+                        </p>
                     </article>
                     <article class="feature-card">
                         <h3>Decision-grade plans</h3>
-                        <p>Pick a runway that matches your cadence—from quick tests to high-volume decision councils.</p>
+                        <p>Pick a runway that matches your cadence—from quick tests to high-volume decision councils.
+                        </p>
                     </article>
                     <article class="feature-card">
                         <h3>Feedback + analytics</h3>
-                        <p>Capture user sentiment and event signals so you can see what resonates and iterate faster.</p>
+                        <p>Capture user sentiment and event signals so you can see what resonates and iterate faster.
+                        </p>
                     </article>
                 </div>
             </section>
@@ -86,7 +92,8 @@
                 <div class="section-header">
                     <p class="eyebrow">Payment-ready</p>
                     <h2 class="section-title">Choose the right plan</h2>
-                    <p class="section-subtitle">Start free, then graduate to a fully instrumented council with a frictionless Lemon Squeezy checkout.</p>
+                    <p class="section-subtitle">Start free, then graduate to a fully instrumented council with a
+                        frictionless Lemon Squeezy checkout.</p>
                 </div>
                 <div class="plan-grid">
                     <article class="plan-card">
@@ -98,7 +105,8 @@
                             <li>Mobile-optimized interface</li>
                             <li>Instant email capture</li>
                         </ul>
-                        <button class="plan-cta" data-plan="starter" data-checkout="{{ pricing_links.starter or '' }}" data-track="plan_cta">Begin for free</button>
+                        <button class="plan-cta" data-plan="starter" data-checkout="{{ pricing_links.starter or '' }}"
+                            data-track="plan_cta">Begin for free</button>
                     </article>
                     <article class="plan-card highlighted">
                         <div class="plan-meta">Pro</div>
@@ -110,7 +118,8 @@
                             <li>Payment-ready checkout link</li>
                             <li>Analytics + feedback export</li>
                         </ul>
-                        <button class="plan-cta" data-plan="pro" data-checkout="{{ pricing_links.pro or '' }}" data-track="plan_cta">Upgrade instantly</button>
+                        <button class="plan-cta" data-plan="pro" data-checkout="{{ pricing_links.pro or '' }}"
+                            data-track="plan_cta">Upgrade instantly</button>
                         <p class="plan-note">Secure checkout powered by Lemon Squeezy.</p>
                     </article>
                 </div>
@@ -155,7 +164,8 @@
                 <div class="feedback-copy">
                     <p class="eyebrow">User signal</p>
                     <h2 class="section-title">Collect feedback + analytics in one view</h2>
-                    <p class="section-subtitle">Track plan interest, measure CTA performance, and capture qualitative notes without leaving the landing page.</p>
+                    <p class="section-subtitle">Track plan interest, measure CTA performance, and capture qualitative
+                        notes without leaving the landing page.</p>
                     <ul class="feedback-highlights">
                         <li>Event logging for key taps (plans, CTAs, hero buttons)</li>
                         <li>Feedback inbox saved to your database for follow-up</li>
@@ -169,7 +179,8 @@
                     </label>
                     <label class="form-field">
                         <span>Feedback</span>
-                        <textarea name="message" rows="4" required placeholder="Tell us what you need to ship."></textarea>
+                        <textarea name="message" rows="4" required
+                            placeholder="Tell us what you need to ship."></textarea>
                     </label>
                     <label class="form-field">
                         <span>Category</span>

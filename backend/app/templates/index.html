@@ -13,6 +13,7 @@
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/static/js/theme.js" defer></script>
+    {% include 'analytics.html' %}
 </head>
 
 <body>
@@ -50,7 +51,8 @@
                     </div>
                 </div>
                 <div class="chat-header__actions">
-                    <button id="theme-toggle" class="icon-button" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
+                    <button id="theme-toggle" class="icon-button" onclick="ThemeManager.toggle()"
+                        aria-label="Toggle Theme">
                         <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
                             <!-- Icon set by JS -->

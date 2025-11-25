@@ -10,6 +10,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 DATABASE_URL = os.environ.get("DATABASE_URL")
+GA_MEASUREMENT_ID = os.environ.get("GA_MEASUREMENT_ID")  # Optional: Google Analytics
 
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY environment variable is not set")
