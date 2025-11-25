@@ -21,15 +21,21 @@
     <div class="page-container">
         <header class="main-header">
             <div class="logo-container">
-                <a href="/" class="logo"
-                    style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-                    <img alt="Shurahub Logo" style="height: 48px; width: auto;">
+                <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                    <img id="logo-mark" class="logo-mark" src="/static/images/logo-black.svg" alt="Shurahub Logo">
                 </a>
                 <div class="tagline">Decision Intelligence</div>
             </div>
-            <nav class="main-nav">
+            <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="main-nav" id="main-nav">
                 <a href="#features">Features</a>
+                <a href="#pricing">Plans</a>
                 <a href="#how-it-works">How it Works</a>
+                <a href="#feedback">Feedback</a>
                 <a href="/login" class="nav-link">Login</a>
                 <button id="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
                     <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -52,9 +58,61 @@
                         Three advanced models. One definitive truth.
                     </p>
                     <div class="cta-container">
-                        <a href="/register" class="cta-button primary">Start Your Council</a>
-                        <a href="#how-it-works" class="cta-button secondary">See How It Works</a>
+                        <a href="/register" class="cta-button primary" data-track="cta_register">Start Your Council</a>
+                        <a href="#how-it-works" class="cta-button secondary" data-track="cta_how_it_works">See How It Works</a>
                     </div>
+                </div>
+            </section>
+
+            <section id="features" class="feature-section">
+                <h2 class="section-title">Built for mobile-first clarity</h2>
+                <div class="feature-grid">
+                    <article class="feature-card">
+                        <h3>Responsive command center</h3>
+                        <p>Fluid layouts, thumb-friendly tap targets, and navigation that collapses elegantly on phones.</p>
+                    </article>
+                    <article class="feature-card">
+                        <h3>Decision-grade plans</h3>
+                        <p>Pick a runway that matches your cadence—from quick tests to high-volume decision councils.</p>
+                    </article>
+                    <article class="feature-card">
+                        <h3>Feedback + analytics</h3>
+                        <p>Capture user sentiment and event signals so you can see what resonates and iterate faster.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section id="pricing" class="plan-section">
+                <div class="section-header">
+                    <p class="eyebrow">Payment-ready</p>
+                    <h2 class="section-title">Choose the right plan</h2>
+                    <p class="section-subtitle">Start free, then graduate to a fully instrumented council with payment-ready hooks.</p>
+                </div>
+                <div class="plan-grid">
+                    <article class="plan-card">
+                        <div class="plan-meta">Starter</div>
+                        <h3>Launch fast</h3>
+                        <p class="plan-price">$0<span>/month</span></p>
+                        <ul class="plan-features">
+                            <li>3 debates per day</li>
+                            <li>Mobile-optimized interface</li>
+                            <li>Instant email capture</li>
+                        </ul>
+                        <button class="plan-cta" data-plan="starter" data-track="plan_cta">Begin for free</button>
+                    </article>
+                    <article class="plan-card highlighted">
+                        <div class="plan-meta">Pro</div>
+                        <h3>Scale decisions</h3>
+                        <p class="plan-price">$29<span>/month</span></p>
+                        <ul class="plan-features">
+                            <li>Unlimited debates</li>
+                            <li>Priority multi-model routing</li>
+                            <li>Payment-ready checkout link</li>
+                            <li>Analytics + feedback export</li>
+                        </ul>
+                        <button class="plan-cta" data-plan="pro" data-track="plan_cta">Upgrade instantly</button>
+                        <p class="plan-note">Plug in your Stripe Payment Link to go live.</p>
+                    </article>
                 </div>
             </section>
 
@@ -91,6 +149,41 @@
                     </div>
                 </div>
                 <h3 class="section-closing">Shurahub turns disagreement into wisdom.</h3>
+            </section>
+
+            <section id="feedback" class="feedback-section">
+                <div class="feedback-copy">
+                    <p class="eyebrow">User signal</p>
+                    <h2 class="section-title">Collect feedback + analytics in one view</h2>
+                    <p class="section-subtitle">Track plan interest, measure CTA performance, and capture qualitative notes without leaving the landing page.</p>
+                    <ul class="feedback-highlights">
+                        <li>Event logging for key taps (plans, CTAs, hero buttons)</li>
+                        <li>Feedback inbox saved to your database for follow-up</li>
+                        <li>Mobile-friendly form with instant status messaging</li>
+                    </ul>
+                </div>
+                <form id="feedback-form" class="feedback-form">
+                    <label class="form-field">
+                        <span>Email (optional)</span>
+                        <input type="email" name="email" placeholder="you@example.com">
+                    </label>
+                    <label class="form-field">
+                        <span>Feedback</span>
+                        <textarea name="message" rows="4" required placeholder="Tell us what you need to ship."></textarea>
+                    </label>
+                    <label class="form-field">
+                        <span>Category</span>
+                        <select name="category">
+                            <option value="">Select one</option>
+                            <option value="mobile">Mobile polish</option>
+                            <option value="payments">Payments</option>
+                            <option value="analytics">Analytics</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+                    <button type="submit" class="cta-button primary" data-track="feedback_submit">Send feedback</button>
+                    <p id="feedback-status" class="form-status" role="status"></p>
+                </form>
             </section>
         </main>
 

@@ -1,6 +1,6 @@
-
 import sqlite3
 import json
+from datetime import datetime
 
 DATABASE_NAME = "shurahub.db"
 
@@ -21,6 +21,25 @@ def initialize_db():
                 synthesizer_response TEXT NOT NULL,
                 opener_rating INTEGER,
                 final_rating INTEGER
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT,
+                message TEXT NOT NULL,
+                category TEXT,
+                created_at TEXT NOT NULL
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS analytics_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_name TEXT NOT NULL,
+                metadata TEXT,
+                created_at TEXT NOT NULL
             )
         ''')
         conn.commit()
@@ -133,3 +152,31 @@ def migrate_from_jsonl(log_file="debate_log.jsonl"):
         print("Log file not found, skipping migration.")
     except Exception as e:
         print(f"An error occurred during migration: {e}")
+
+
+def save_feedback_entry(email, message, category=None):
+    """Stores user feedback submissions for later analysis."""
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            '''
+            INSERT INTO feedback (email, message, category, created_at)
+            VALUES (?, ?, ?, ?)
+            ''',
+            (email, message, category, datetime.utcnow().isoformat()),
+        )
+        conn.commit()
+
+
+def record_analytics_event(event_name, metadata=None):
+    """Records lightweight analytics events for the landing page."""
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            '''
+            INSERT INTO analytics_events (event_name, metadata, created_at)
+            VALUES (?, ?, ?)
+            ''',
+            (event_name, json.dumps(metadata or {}), datetime.utcnow().isoformat()),
+        )
+        conn.commit()
