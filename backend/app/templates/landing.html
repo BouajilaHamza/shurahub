@@ -86,7 +86,7 @@
                 <div class="section-header">
                     <p class="eyebrow">Payment-ready</p>
                     <h2 class="section-title">Choose the right plan</h2>
-                    <p class="section-subtitle">Start free, then graduate to a fully instrumented council with payment-ready hooks.</p>
+                    <p class="section-subtitle">Start free, then graduate to a fully instrumented council with a frictionless Lemon Squeezy checkout.</p>
                 </div>
                 <div class="plan-grid">
                     <article class="plan-card">
@@ -98,7 +98,7 @@
                             <li>Mobile-optimized interface</li>
                             <li>Instant email capture</li>
                         </ul>
-                        <button class="plan-cta" data-plan="starter" data-track="plan_cta">Begin for free</button>
+                        <button class="plan-cta" data-plan="starter" data-checkout="{{ pricing_links.starter or '' }}" data-track="plan_cta">Begin for free</button>
                     </article>
                     <article class="plan-card highlighted">
                         <div class="plan-meta">Pro</div>
@@ -110,8 +110,8 @@
                             <li>Payment-ready checkout link</li>
                             <li>Analytics + feedback export</li>
                         </ul>
-                        <button class="plan-cta" data-plan="pro" data-track="plan_cta">Upgrade instantly</button>
-                        <p class="plan-note">Plug in your Stripe Payment Link to go live.</p>
+                        <button class="plan-cta" data-plan="pro" data-checkout="{{ pricing_links.pro or '' }}" data-track="plan_cta">Upgrade instantly</button>
+                        <p class="plan-note">Secure checkout powered by Lemon Squeezy.</p>
                     </article>
                 </div>
             </section>
