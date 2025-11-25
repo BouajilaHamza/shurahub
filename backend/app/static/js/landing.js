@@ -75,7 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             const plan = button.dataset.plan || 'starter';
             sendAnalytics('plan_interest', { plan });
-            window.location.href = '/register';
+            const checkout = button.dataset.checkout;
+
+            if (checkout) {
+                window.open(checkout, '_blank', 'noopener');
+            } else {
+                window.location.href = '/register';
+            }
         });
     });
 

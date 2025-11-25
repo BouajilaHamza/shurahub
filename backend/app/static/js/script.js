@@ -70,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ws.send(JSON.stringify({ text }));
             appendUserMessage(text);
             promptInput.value = '';
+            resizePrompt();
+            updateSendState();
             scrollToBottom();
         }
     }
@@ -105,7 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function scrollToBottom() {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        requestAnimationFrame(() => {
+            chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+        });
     }
 
     chatMessages.addEventListener('click', (event) => {
@@ -122,6 +126,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function resizePrompt() {
+        promptInput.style.height = 'auto';
+        promptInput.style.height = `${Math.min(promptInput.scrollHeight, 160)}px`;
+    }
+
+    function updateSendState() {
+        const hasText = Boolean(promptInput.value.trim());
+        sendButton.disabled = !hasText;
+    }
+
     sendButton.addEventListener('click', sendMessage);
     promptInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -129,6 +143,14 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage();
         }
     });
+
+    promptInput.addEventListener('input', () => {
+        resizePrompt();
+        updateSendState();
+    });
+
+    resizePrompt();
+    updateSendState();
 
     // Mobile Menu Logic
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
