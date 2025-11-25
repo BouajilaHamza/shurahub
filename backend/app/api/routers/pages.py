@@ -7,10 +7,17 @@ import os
 router = APIRouter()
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "../../templates"))
 
+PRICING_CHECKOUT_LINKS = {
+    "starter": os.environ.get("LEMONSQUEEZY_STARTER_URL"),
+    "pro": os.environ.get("LEMONSQUEEZY_PRO_URL"),
+}
+
 @router.get("/", response_class=HTMLResponse)
 async def read_landing(request: Request):
     user = get_user_from_cookie(request)
-    return templates.TemplateResponse("landing.html", {"request": request, "user": user})
+    return templates.TemplateResponse(
+        "landing.html", {"request": request, "user": user, "pricing_links": PRICING_CHECKOUT_LINKS}
+    )
 
 @router.get("/chat", response_class=HTMLResponse)
 async def read_chat(request: Request):
