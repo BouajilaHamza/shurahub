@@ -2,108 +2,117 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import JSON, Column
+from sqlmodel import SQLModel, Field, create_engine, Session
 
-from app.core.config import DATABASE_URL, supabase_client
+from app.core.config import DATABASE_URL
 
 
 logger = logging.getLogger(__name__)
 
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args={"connect_timeout": 5})
+# --- SQLModel Definitions ---
+class Debate(SQLModel, table=True):
+    """Model for debate records."""
+    debate_id: str = Field(primary_key=True)
+    user_id: str = Field(index=True)
+    timestamp: datetime
+    user_prompt: str
+    opener: Dict[str, Any] = Field(sa_column=Column(JSON))
+    critiquer: Dict[str, Any] = Field(sa_column=Column(JSON))
+    synthesizer: Dict[str, Any] = Field(sa_column=Column(JSON))
+    opener_rating: Optional[int] = None
+    final_rating: Optional[int] = None
 
 
-DEBATE_DDL = [
-    """
-    CREATE TABLE IF NOT EXISTS public.debates (
-        debate_id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        timestamp TIMESTAMPTZ NOT NULL,
-        user_prompt TEXT NOT NULL,
-        opener JSONB NOT NULL,
-        critiquer JSONB NOT NULL,
-        synthesizer JSONB NOT NULL,
-        opener_rating INTEGER,
-        final_rating INTEGER
-    )
-    """,
-    """CREATE INDEX IF NOT EXISTS idx_debates_user_id ON public.debates(user_id)""",
-]
+class Feedback(SQLModel, table=True):
+    """Model for user feedback."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, index=True)
+    email: Optional[str] = None
+    message: str
+    category: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-FEEDBACK_DDL = [
-    """
-    CREATE TABLE IF NOT EXISTS public.feedback (
-        id BIGSERIAL PRIMARY KEY,
-        user_id TEXT,
-        email TEXT,
-        message TEXT NOT NULL,
-        category TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-    """,
-    """CREATE INDEX IF NOT EXISTS idx_feedback_user_id ON public.feedback(user_id)""",
-]
+class AnalyticsEvent(SQLModel, table=True):
+    """Model for analytics events."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, index=True)
+    event_name: str
+    event_data: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-ANALYTICS_DDL = [
-    """
-    CREATE TABLE IF NOT EXISTS public.analytics_events (
-        id BIGSERIAL PRIMARY KEY,
-        user_id TEXT,
-        event_name TEXT NOT NULL,
-        metadata JSONB,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-    """,
-    """CREATE INDEX IF NOT EXISTS idx_analytics_user_id ON public.analytics_events(user_id)""",
-]
+# --- Database Engine & Session Management ---
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"connect_timeout": 5},
+    echo=False,
+)
 
 
 def initialize_db() -> None:
-    """Ensure Supabase (Postgres) tables exist before the app starts."""
+    """Create all tables in the database."""
     try:
-        with engine.begin() as connection:
-            for statement in DEBATE_DDL + FEEDBACK_DDL + ANALYTICS_DDL:
-                connection.execute(text(statement))
-    except SQLAlchemyError as exc:
+        SQLModel.metadata.create_all(engine)
+        logger.info("Database tables initialized successfully.")
+    except Exception as exc:
         logger.warning(
-            "Skipping Supabase table initialization because the database is unreachable: %s",
+            "Skipping database initialization because the database is unreachable: %s",
             exc,
         )
-    except Exception as exc:  # pragma: no cover - defensive guard
-        logger.exception("Unexpected error while initializing Supabase tables", exc_info=exc)
+
+
+def get_session():
+    """Dependency to get a database session."""
+    with Session(engine) as session:
+        yield session
 
 
 def save_feedback_entry(
-    email: Optional[str], message: str, category: Optional[str] = None, user_id: Optional[str] = None
+    email: Optional[str],
+    message: str,
+    category: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> None:
-    """Store user feedback submissions in Supabase."""
+    """Store user feedback submissions."""
+    try:
+        feedback = Feedback(
+            email=email,
+            message=message,
+            category=category,
+            user_id=user_id,
+        )
+        with Session(engine) as session:
+            session.add(feedback)
+            session.commit()
+    except Exception as exc:
+        logger.warning(
+            "Failed to save feedback entry: %s. Skipping this feedback.",
+            exc,
+        )
 
-    payload: Dict[str, Any] = {
-        "email": email,
-        "message": message,
-        "category": category,
-        "created_at": datetime.utcnow().isoformat(),
-    }
 
-    if user_id:
-        payload["user_id"] = user_id
-
-    supabase_client.table("feedback").insert(payload).execute()
-
-
-def record_analytics_event(event_name: str, metadata: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None) -> None:
-    """Record lightweight analytics for the landing page."""
-
-    payload: Dict[str, Any] = {
-        "event_name": event_name,
-        "metadata": metadata or {},
-        "created_at": datetime.utcnow().isoformat(),
-    }
-
-    if user_id:
-        payload["user_id"] = user_id
-
-    supabase_client.table("analytics_events").insert(payload).execute()
+def record_analytics_event(
+    event_name: str,
+    metadata: Optional[Dict[str, Any]] = None,
+    user_id: Optional[str] = None,
+) -> None:
+    """Record lightweight analytics events."""
+    try:
+        event = AnalyticsEvent(
+            event_name=event_name,
+            event_data=metadata or {},
+            user_id=user_id,
+        )
+        with Session(engine) as session:
+            session.add(event)
+            session.commit()
+    except Exception as exc:
+        logger.warning(
+            "Failed to record analytics event '%s': %s. Skipping this event.",
+            event_name,
+            exc,
+        )

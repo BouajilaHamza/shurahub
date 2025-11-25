@@ -96,7 +96,10 @@ async def websocket_endpoint(
             
             except Exception as e:
                 print(f"Error processing message: {e}")
-                await websocket.send_json({'sender': 'Shurahub', 'text': f'Error: {str(e)}'})
+                try:
+                    await websocket.send_json({'sender': 'Shurahub', 'text': f'Error: {str(e)}'})
+                except Exception as send_error:
+                    print(f"Could not send error message to client: {send_error}")
 
     except WebSocketDisconnect:
         print(f"\nClient {user['id']} disconnected.")
@@ -105,5 +108,10 @@ async def websocket_endpoint(
         print(error_message)
         try:
             await websocket.send_json({'sender': 'Shurahub', 'text': f'Sorry, a system error occurred: {e}'})
-        except:
-            pass
+        except Exception as send_error:
+            print(f"Could not send error message: {send_error}")
+        finally:
+            try:
+                await websocket.close(code=1011, reason="Server error")
+            except:
+                pass
