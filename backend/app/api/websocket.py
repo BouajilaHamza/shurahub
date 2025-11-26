@@ -94,12 +94,28 @@ async def websocket_endpoint(
                     print(f"Failed to log debate to DB: {db_e}")
                     # Don't crash the chat if DB logging fails
             
+            except WebSocketDisconnect:
+                # Client disconnected gracefully - break the loop immediately
+                print(f"\nClient {user['id']} disconnected gracefully.")
+                break
+            
             except Exception as e:
+                error_msg = str(e)
+                # Check if it's a disconnect-related error
+                if "disconnect" in error_msg.lower() or "closed" in error_msg.lower():
+                    print(f"Client {user['id']} connection closed: {error_msg}")
+                    break  # Exit the loop, don't try to send anything
+                
+                # For other errors, try to send error message only if connection is still open
                 print(f"Error processing message: {e}")
                 try:
-                    await websocket.send_json({'sender': 'Shurahub', 'text': f'Error: {str(e)}'})
-                except Exception as send_error:
-                    print(f"Could not send error message to client: {send_error}")
+                    # Check if websocket is still connected before sending
+                    if websocket.client_state.name == "CONNECTED":
+                        await websocket.send_json({'sender': 'Shurahub', 'text': f'Error: {error_msg}'})
+                except Exception:
+                    # If we can't send, connection is likely closed - break the loop
+                    print(f"Connection closed, cannot send error message")
+                    break
 
     except WebSocketDisconnect:
         print(f"\nClient {user['id']} disconnected.")
