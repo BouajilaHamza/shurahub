@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Response, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from app.core.config import supabase_client, GA_MEASUREMENT_ID
+from app.core.config import supabase_client, GA_MEASUREMENT_ID, HOTJAR_ID
 import os
 
 router = APIRouter()
@@ -22,7 +22,10 @@ async def read_login_get(request: Request, message: str = None):
     user = get_user_from_cookie(request)
     # if user:
     #     return RedirectResponse(url="/chat", status_code=302)
-    return templates.TemplateResponse("login.html", {"request": request, "message": message, "user": user, "ga_measurement_id": GA_MEASUREMENT_ID})
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request, "message": message, "user": user, "ga_measurement_id": GA_MEASUREMENT_ID, "hotjar_id": HOTJAR_ID},
+    )
 
 @router.post("/login", response_class=HTMLResponse)
 def read_login_post(request: Request, response: Response, email: str = Form(...), password: str = Form(...)):
@@ -32,14 +35,21 @@ def read_login_post(request: Request, response: Response, email: str = Form(...)
         response.set_cookie(key="user-session", value=user_session.session.access_token, httponly=True)
         return response
     except Exception as e:
-        return templates.TemplateResponse("login.html", {"request": request, "error": f"Login failed: {e}", "user": None, "ga_measurement_id": GA_MEASUREMENT_ID}, status_code=401)
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": f"Login failed: {e}", "user": None, "ga_measurement_id": GA_MEASUREMENT_ID, "hotjar_id": HOTJAR_ID},
+            status_code=401,
+        )
 
 @router.get("/register", response_class=HTMLResponse)
 async def read_register_get(request: Request, error: str = None):
     user = get_user_from_cookie(request)
     # if user:
     #     return RedirectResponse(url="/chat", status_code=302)
-    return templates.TemplateResponse("register.html", {"request": request, "error": error, "user": user, "ga_measurement_id": GA_MEASUREMENT_ID})
+    return templates.TemplateResponse(
+        "register.html",
+        {"request": request, "error": error, "user": user, "ga_measurement_id": GA_MEASUREMENT_ID, "hotjar_id": HOTJAR_ID},
+    )
 
 @router.post("/register")
 def handle_register(email: str = Form(...), password: str = Form(...)):

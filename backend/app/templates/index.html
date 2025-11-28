@@ -92,6 +92,24 @@
                     <div class="debate-content"></div>
                 </div>
                 <button class="view-debate-button">View Debate</button>
+                <div class="response-feedback" hidden>
+                    <div class="feedback-header">
+                        <p>Was this council verdict on point?</p>
+                        <div class="feedback-actions">
+                            <button class="feedback-chip" data-rating="helpful">👍 Nailed it</button>
+                            <button class="feedback-chip" data-rating="mixed">😐 Mixed</button>
+                            <button class="feedback-chip" data-rating="off_target">👎 Off target</button>
+                        </div>
+                    </div>
+                    <label class="feedback-note">
+                        <span>What should we adjust?</span>
+                        <textarea rows="2" placeholder="Quick note for the council (optional)"></textarea>
+                    </label>
+                    <div class="feedback-footer">
+                        <button class="submit-feedback" disabled>Send feedback</button>
+                        <span class="feedback-status" role="status"></span>
+                    </div>
+                </div>
             </div>
         </div>
     </template>

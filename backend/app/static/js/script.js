@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let ws;
     let currentShurahubMessage;
     let typingIndicatorTimeout;
+    let lastPrompt = '';
 
     function connect() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -52,6 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 finalAnswer.innerHTML = marked.parse(answer);
                 const viewDebateButton = currentShurahubMessage.querySelector('.view-debate-button');
                 viewDebateButton.style.display = 'block';
+                const feedbackBlock = currentShurahubMessage.querySelector('.response-feedback');
+                if (feedbackBlock) {
+                    feedbackBlock.hidden = false;
+                    wireResponseFeedback(feedbackBlock, answer, lastPrompt);
+                }
             } else {
                 const debateEntry = document.createElement('div');
                 debateEntry.classList.add('debate-entry');
@@ -68,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = promptInput.value.trim();
         if (text && ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ text }));
+            lastPrompt = text;
             appendUserMessage(text);
             promptInput.value = '';
             resizePrompt();
@@ -134,6 +141,63 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateSendState() {
         const hasText = Boolean(promptInput.value.trim());
         sendButton.disabled = !hasText;
+    }
+
+    function wireResponseFeedback(block, finalAnswer, promptText) {
+        const chips = block.querySelectorAll('.feedback-chip');
+        const noteField = block.querySelector('textarea');
+        const submitButton = block.querySelector('.submit-feedback');
+        const status = block.querySelector('.feedback-status');
+        let rating = null;
+
+        const updateState = () => {
+            submitButton.disabled = !rating;
+        };
+
+        chips.forEach((chip) => {
+            chip.addEventListener('click', () => {
+                chips.forEach((button) => button.classList.remove('selected'));
+                chip.classList.add('selected');
+                rating = chip.dataset.rating;
+                status.textContent = '';
+                updateState();
+            });
+        });
+
+        submitButton.addEventListener('click', async () => {
+            if (!rating) return;
+
+            submitButton.disabled = true;
+            status.textContent = 'Sending...';
+
+            const payload = {
+                email: null,
+                category: 'council_response',
+                message: `rating=${rating}; prompt="${promptText.slice(0, 140)}"; verdict="${finalAnswer.slice(0, 160)}"${noteField.value.trim() ? `; note=${noteField.value.trim()}` : ''}`,
+            };
+
+            try {
+                const response = await fetch('/engagement/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Request failed');
+                }
+
+                status.textContent = 'Thanks for the signal.';
+                chips.forEach((chip) => (chip.disabled = true));
+                if (noteField) {
+                    noteField.disabled = true;
+                }
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                status.textContent = 'Unable to send feedback right now.';
+                submitButton.disabled = false;
+            }
+        });
     }
 
     sendButton.addEventListener('click', sendMessage);
