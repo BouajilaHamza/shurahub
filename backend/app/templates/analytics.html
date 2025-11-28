@@ -1,0 +1,52 @@
+{% if ga_measurement_id %}
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', '{{ ga_measurement_id }}');
+
+    // Custom event tracking helper
+    function trackEvent(eventName, eventParams = {}) {
+        if (typeof gtag !== 'undefined') {
+            gtag('event', eventName, eventParams);
+        }
+    }
+
+    // Track clicks on elements with data-track attribute
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-track]').forEach(function (element) {
+            element.addEventListener('click', function () {
+                const eventName = this.getAttribute('data-track');
+                const eventParams = {
+                    element_id: this.id || '',
+                    element_class: this.className || '',
+                    element_text: this.textContent.trim().substring(0, 100)
+                };
+
+                // Add custom parameters from data attributes
+                if (this.hasAttribute('data-plan')) {
+                    eventParams.plan = this.getAttribute('data-plan');
+                }
+
+                trackEvent(eventName, eventParams);
+            });
+        });
+    });
+</script>
+{% endif %}
+
+{% if hotjar_id %}
+<!-- Hotjar Tracking Code -->
+<script>
+    (function (h, o, t, j, a, r) {
+        h.hj = h.hj || function () { (h.hj.q = h.hj.q || []).push(arguments); };
+        h._hjSettings = { hjid: {{ hotjar_id | tojson }}, hjsv: 6 };
+        a = o.getElementsByTagName('head')[0];
+        r = o.createElement('script'); r.async = 1;
+        r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
+        a.appendChild(r);
+    })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
+</script>
+{% endif %}

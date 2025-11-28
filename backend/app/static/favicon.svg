@@ -1,0 +1,18 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient for checkmark -->
+    <linearGradient id="check-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7C3AED" />
+      <stop offset="50%" style="stop-color:#2563EB" />
+      <stop offset="100%" style="stop-color:#06B6D4" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Checkmark icon - centered and larger -->
+  <path d="M16 32 L28 44 L48 20"
+        stroke="url(#check-gradient)"
+        stroke-width="6"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>
