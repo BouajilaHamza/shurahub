@@ -235,6 +235,8 @@ body {
     box-sizing: border-box;
     flex: 1;
     position: relative;
+    overflow: hidden;
+    /* Fix for scrolling */
 }
 
 .chat-messages {
