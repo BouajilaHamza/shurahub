@@ -31,6 +31,7 @@ body {
     --accent-secondary: #DB2777;
     /* Pink */
     --accent-gradient: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
+    --accent-gradient-hover: linear-gradient(135deg, #6D28D9 0%, #BE185D 100%);
 
     --border-color: #E2E8F0;
     --glass-bg: rgba(255, 255, 255, 0.7);
@@ -43,14 +44,17 @@ body {
     --spacing-lg: 2rem;
 
     /* Radius */
-    --radius-sm: 6px;
-    --radius-md: 12px;
+    --radius-sm: 8px;
+    --radius-md: 16px;
     --radius-lg: 24px;
+    --radius-full: 9999px;
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.15);
 
     /* Legacy Support Mappings */
     --bg-container: var(--bg-secondary);
@@ -70,6 +74,7 @@ body {
     --accent-primary: #8B5CF6;
     --accent-secondary: #EC4899;
     --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    --accent-gradient-hover: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
 
     --border-color: #1E293B;
     --glass-bg: rgba(15, 23, 42, 0.6);
@@ -78,15 +83,34 @@ body {
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3);
+    --shadow-glow: 0 0 25px rgba(139, 92, 246, 0.2);
 }
 
 a {
     color: inherit;
     text-decoration: none;
+    transition: color 0.2s ease;
 }
 
 button {
     font-family: inherit;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 /* Logo Theme Switching */

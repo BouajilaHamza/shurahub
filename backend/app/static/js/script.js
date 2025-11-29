@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const promptInput = document.getElementById('prompt-input');
     const sendButton = document.getElementById('send-button');
+    const exampleButton = document.getElementById('example-button');
+    const statusBar = document.getElementById('chat-status');
+    const chatInputShell = document.querySelector('.chat-input');
     const userMessageTemplate = document.getElementById('user-message-template');
     const shurahubMessageTemplate = document.getElementById('shurahub-message-template');
 
@@ -9,39 +12,135 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentShurahubMessage;
     let typingIndicatorTimeout;
     let lastPrompt = '';
+    let isAwaitingResponse = false;
+    let streamBuffers = {};
+
+    const examplePrompt = "Decide between Next.js and Astro for a 3k-page content site that updates daily.";
+
+    function setStatus(message, isActive = false) {
+        if (!statusBar) return;
+        statusBar.textContent = message;
+        statusBar.classList.toggle('active', isActive);
+    }
+
+    function setWorkingState(isWorking) {
+        isAwaitingResponse = isWorking;
+        if (chatInputShell) {
+            chatInputShell.classList.toggle('busy', isWorking);
+        }
+        sendButton.setAttribute('aria-busy', isWorking ? 'true' : 'false');
+        updateSendState();
+    }
 
     function connect() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws`;
         ws = new WebSocket(wsUrl);
 
-        ws.onopen = () => console.log('WebSocket connection established');
+        ws.onopen = () => {
+            setStatus('Connected. Start a new debate.');
+        };
         ws.onmessage = (event) => handleServerMessage(JSON.parse(event.data));
         ws.onclose = () => {
-            console.log('WebSocket connection closed. Reconnecting...');
-            setTimeout(connect, 3000); // Try to reconnect every 3 seconds
+            setStatus('Reconnecting to the council...', true);
+            setWorkingState(false);
+            setTimeout(connect, 2000);
         };
         ws.onerror = (error) => {
             console.error('WebSocket error:', error);
-            ws.close();
+            setStatus('Connection hiccup. Retrying...', true);
         };
     }
 
-    function handleServerMessage(data) {
-        clearTimeout(typingIndicatorTimeout);
-        removeTypingIndicator();
+    const roleLabels = {
+        opener: 'Opener',
+        critiquer: 'Critiquer',
+        synthesizer: 'Judge',
+    };
 
+    function getOrCreateDebateEntry(role, sender) {
+        if (!currentShurahubMessage) return null;
+        const debateContent = currentShurahubMessage.querySelector('.debate-content');
+        if (!debateContent) return null;
+
+        let entry = debateContent.querySelector(`.debate-entry[data-role="${role}"]`);
+        if (!entry) {
+            entry = document.createElement('div');
+            entry.classList.add('debate-entry');
+            entry.dataset.role = role;
+            const heading = document.createElement('div');
+            heading.className = 'debate-heading';
+            const roleBadge = document.createElement('span');
+            roleBadge.className = `role-badge ${role}`;
+            roleBadge.textContent = roleLabels[role] || role;
+            const modelChip = document.createElement('span');
+            modelChip.className = 'model-chip';
+            modelChip.textContent = sender || 'Model';
+            heading.appendChild(roleBadge);
+            heading.appendChild(modelChip);
+            const body = document.createElement('div');
+            body.className = 'stream-text';
+            entry.appendChild(heading);
+            entry.appendChild(body);
+            debateContent.appendChild(entry);
+        } else {
+            const chip = entry.querySelector('.model-chip');
+            if (chip && sender) {
+                chip.textContent = sender;
+            }
+        }
+        return entry;
+    }
+
+    function handleStreamChunk(data) {
+        if (!currentShurahubMessage) return;
+        const role = data.role || data.sender || 'stream';
+        streamBuffers[role] = (streamBuffers[role] || '') + data.text;
+        const entry = getOrCreateDebateEntry(role, data.sender);
+        if (!entry) return;
+        const textTarget = entry.querySelector('.stream-text');
+        if (textTarget) {
+            textTarget.innerHTML = marked.parse(streamBuffers[role]);
+        }
+
+        if (role === 'synthesizer') {
+            const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
+            if (finalAnswer) {
+                finalAnswer.innerHTML = marked.parse(streamBuffers[role]);
+            }
+        }
+        scrollToBottom();
+    }
+
+    function handleServerMessage(data) {
         if (data.type === 'typing') {
             showTypingIndicator(data.sender);
+            setStatus(`${data.sender} is drafting...`, true);
             return;
         }
+
+        if (data.type === 'stream') {
+            handleStreamChunk(data);
+            return;
+        }
+
+        clearTimeout(typingIndicatorTimeout);
+        removeTypingIndicator();
 
         if (data.sender === 'Shurahub' && data.text === 'Initiating collaborative debate...') {
             const messageElement = shurahubMessageTemplate.content.cloneNode(true);
             chatMessages.appendChild(messageElement);
             currentShurahubMessage = chatMessages.lastElementChild;
+            streamBuffers = {};
+            setWorkingState(true);
+            setStatus(data.mode === 'guest' ? 'Guest session: warming up the council...' : 'Council warming up...', true);
             scrollToBottom();
             return;
+        }
+
+        if (data.sender === 'Shurahub' && data.text.toLowerCase().includes('error')) {
+            setWorkingState(false);
+            setStatus('We hit a snag. Please try again.');
         }
 
         if (currentShurahubMessage) {
@@ -50,21 +149,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.text.startsWith('**Final Verdict:**')) {
                 const answer = data.text.replace('**Final Verdict:**', '').trim();
-                finalAnswer.innerHTML = marked.parse(answer);
+                finalAnswer.innerHTML = marked.parse(answer || streamBuffers['synthesizer'] || '');
                 const viewDebateButton = currentShurahubMessage.querySelector('.view-debate-button');
-                viewDebateButton.style.display = 'block';
+                if (viewDebateButton) {
+                    viewDebateButton.style.display = 'inline-flex';
+                    viewDebateButton.setAttribute('aria-expanded', 'false');
+                    const label = viewDebateButton.querySelector('.label');
+                    const chevron = viewDebateButton.querySelector('.chevron');
+                    if (label) label.textContent = 'Open debate transcript';
+                    if (chevron) chevron.style.transform = 'rotate(0deg)';
+                    const debateContainer = currentShurahubMessage.querySelector('.debate-container');
+                    if (debateContainer) debateContainer.hidden = true;
+                }
                 const feedbackBlock = currentShurahubMessage.querySelector('.response-feedback');
                 if (feedbackBlock) {
                     feedbackBlock.hidden = false;
                     wireResponseFeedback(feedbackBlock, answer, lastPrompt);
                 }
+                setWorkingState(false);
+                setStatus('Ready for the next decision.');
             } else {
-                const debateEntry = document.createElement('div');
-                debateEntry.classList.add('debate-entry');
-                const sender = `<b>${data.sender}:</b>`;
-                const response = marked.parse(data.text);
-                debateEntry.innerHTML = `${sender}<br>${response}`;
-                debateContent.appendChild(debateEntry);
+                const role = data.role || 'update';
+                const entry = getOrCreateDebateEntry(role, data.sender);
+                if (entry) {
+                    const textTarget = entry.querySelector('.stream-text');
+                    if (textTarget) {
+                        textTarget.innerHTML = marked.parse(data.text);
+                    }
+                } else if (debateContent) {
+                    const debateEntry = document.createElement('div');
+                    debateEntry.classList.add('debate-entry');
+                    const sender = `<b>${data.sender}:</b>`;
+                    const response = marked.parse(data.text);
+                    debateEntry.innerHTML = `${sender}<br>${response}`;
+                    debateContent.appendChild(debateEntry);
+                }
             }
         }
         scrollToBottom();
@@ -72,15 +191,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function sendMessage() {
         const text = promptInput.value.trim();
-        if (text && ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ text }));
-            lastPrompt = text;
-            appendUserMessage(text);
-            promptInput.value = '';
-            resizePrompt();
-            updateSendState();
-            scrollToBottom();
+        if (!text || isAwaitingResponse) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            setStatus('Connecting to the council...', true);
+            return;
         }
+
+        ws.send(JSON.stringify({ text }));
+        lastPrompt = text;
+        streamBuffers = {};
+        appendUserMessage(text);
+        promptInput.value = '';
+        resizePrompt();
+        setWorkingState(true);
+        setStatus('Council drafting your verdict...', true);
+        scrollToBottom();
     }
 
     function appendUserMessage(text) {
@@ -101,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
         typingIndicator.innerHTML = `<em>${sender} is typing...</em>`;
         scrollToBottom();
 
-        // Fallback to remove indicator if no new message arrives
         typingIndicatorTimeout = setTimeout(removeTypingIndicator, 5000);
     }
 
@@ -112,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     function scrollToBottom() {
         requestAnimationFrame(() => {
             chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
@@ -120,15 +243,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     chatMessages.addEventListener('click', (event) => {
-        if (event.target.classList.contains('view-debate-button')) {
-            const button = event.target;
-            const debateContainer = button.parentElement.querySelector('.debate-container');
-            if (debateContainer.style.display === 'none') {
-                debateContainer.style.display = 'block';
-                button.textContent = 'Hide Debate';
-            } else {
-                debateContainer.style.display = 'none';
-                button.textContent = 'View Debate';
+        const button = event.target.closest('.view-debate-button');
+        if (button) {
+            const debateContainer = button.closest('.message-content').querySelector('.debate-container');
+            const isHidden = debateContainer.hasAttribute('hidden');
+            debateContainer.hidden = !isHidden;
+            button.setAttribute('aria-expanded', String(!isHidden));
+            const label = button.querySelector('.label');
+            const chevron = button.querySelector('.chevron');
+            if (label) {
+                label.textContent = isHidden ? 'Hide debate transcript' : 'Open debate transcript';
+            }
+            if (chevron) {
+                chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
             }
         }
     });
@@ -140,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateSendState() {
         const hasText = Boolean(promptInput.value.trim());
-        sendButton.disabled = !hasText;
+        sendButton.disabled = !hasText || isAwaitingResponse;
     }
 
     function wireResponseFeedback(block, finalAnswer, promptText) {
@@ -213,6 +340,15 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSendState();
     });
 
+    if (exampleButton) {
+        exampleButton.addEventListener('click', () => {
+            promptInput.value = examplePrompt;
+            resizePrompt();
+            updateSendState();
+            sendMessage();
+        });
+    }
+
     resizePrompt();
     updateSendState();
 
@@ -235,6 +371,17 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.addEventListener('click', () => {
         sidebar.classList.remove('open');
         overlay.classList.remove('active');
+    });
+
+    // Redirect any external links to the chat to keep guests inside the product
+    document.querySelectorAll('a[href^="http"]').forEach((link) => {
+        const url = new URL(link.href);
+        if (url.host && url.host !== window.location.host) {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                window.location.href = '/chat';
+            });
+        }
     });
 
     connect(); // Connect to the WebSocket on page load

@@ -179,5 +179,15 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput.addEventListener('input', debounce(renderDebates, 300));
     sortSelect.addEventListener('change', renderDebates);
 
+    document.querySelectorAll('a[href^="http"]').forEach((link) => {
+        const url = new URL(link.href);
+        if (url.host && url.host !== window.location.host) {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                window.location.href = '/chat';
+            });
+        }
+    });
+
     loadDebates();
 });

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/static/js/theme.js" defer></script>
@@ -22,7 +22,7 @@
             <div class="sidebar-header">
                 <a href="/" class="logo"
                     style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-                    <img alt="Shurahub Logo" style="height: 40px; width: auto;">
+                    <img alt="Shurahub Logo" style="height: 32px; width: auto;">
                 </a>
             </div>
             <nav class="sidebar-nav">
@@ -30,13 +30,17 @@
                 <a href="/review" class="nav-item">Debate Archive</a>
             </nav>
             <div class="sidebar-footer">
+                {% if user %}
                 <a href="/logout">Logout</a>
+                {% else %}
+                <a href="/login">Login to save history</a>
+                {% endif %}
             </div>
         </aside>
         <main class="main-content">
             <header class="chat-header">
                 <div class="chat-header__left">
-                    <button id="mobile-menu-btn" class="icon-button" aria-label="Toggle Menu">
+                    <button id="mobile-menu-btn" class="icon-button" aria-label="Toggle Menu" style="display: none;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -47,10 +51,14 @@
                     <div class="chat-header__titles">
                         <div class="eyebrow">Command Center</div>
                         <h1>Collaborative debates, refined.</h1>
-                        <p class="subtitle">Start a debate and keep every response within reach on mobile.</p>
                     </div>
                 </div>
                 <div class="chat-header__actions">
+                    {% if not user %}
+                    <span class="guest-pill"
+                        title="You can use Shurahub without signing in. Responses won't be saved.">Guest
+                        mode</span>
+                    {% endif %}
                     <button id="theme-toggle" class="icon-button" onclick="ThemeManager.toggle()"
                         aria-label="Toggle Theme">
                         <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -60,19 +68,45 @@
                     </button>
                 </div>
             </header>
-            <div class="chat-messages" id="chat-messages">
-                <!-- Messages will be appended here -->
-            </div>
-            <div class="chat-input-container">
-                <div class="chat-input">
-                    <textarea id="prompt-input" rows="1"
-                        placeholder="Start a new debate (e.g., 'Compare Next.js vs. Astro for a content site')"></textarea>
-                    <button id="send-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px"
-                            height="20px">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                        </svg>
-                    </button>
+            <div class="chat-shell">
+                <div class="chat-status" id="chat-status">Connected</div>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Empty State -->
+                    <div id="empty-state"
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; opacity: 0.8;">
+                        <div
+                            style="background: var(--bg-secondary); padding: 2rem; border-radius: 24px; border: 1px solid var(--border-color); max-width: 400px;">
+                            <h3 style="margin-top: 0; font-size: 1.25rem; color: var(--text-primary);">Start a new
+                                debate</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Ask the council to weigh in
+                                on a complex decision.</p>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <button class="ghost-button"
+                                    onclick="document.getElementById('prompt-input').value = 'Compare Next.js vs. Astro for a content site'; document.getElementById('prompt-input').focus();"
+                                    style="text-align: left; border: 1px solid var(--border-color); background: var(--bg-primary);">
+                                    Compare Next.js vs. Astro
+                                </button>
+                                <button class="ghost-button"
+                                    onclick="document.getElementById('prompt-input').value = 'Should I use a relational or NoSQL database for a social app?'; document.getElementById('prompt-input').focus();"
+                                    style="text-align: left; border: 1px solid var(--border-color); background: var(--bg-primary);">
+                                    Relational vs. NoSQL DB
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <div class="chat-input">
+                        <textarea id="prompt-input" rows="1" placeholder="Start a new debate..."></textarea>
+                        <button id="send-button" aria-label="Send message">
+                            <span>Send</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20"
+                                height="20">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="chat-helper">Press Enter to send • Shift + Enter for a new line</div>
                 </div>
             </div>
         </main>
@@ -87,11 +121,18 @@
     <template id="shurahub-message-template">
         <div class="message shurahub-message">
             <div class="message-content">
+                <div class="verdict-chip">Golden Answer</div>
                 <div class="final-answer"></div>
-                <div class="debate-container" style="display: none;">
-                    <div class="debate-content"></div>
+                <div class="debate-actions">
+                    <div class="debate-meta">3-model council · live transcript</div>
+                    <button class="view-debate-button" aria-expanded="false">
+                        <span class="label">Open debate transcript</span>
+                        <span class="chevron">▼</span>
+                    </button>
                 </div>
-                <button class="view-debate-button">View Debate</button>
+                <div class="debate-container" hidden>
+                    <div class="debate-content timeline"></div>
+                </div>
                 <div class="response-feedback" hidden>
                     <div class="feedback-header">
                         <p>Was this council verdict on point?</p>
@@ -115,6 +156,24 @@
     </template>
 
     <script src="/static/js/script.js"></script>
+    <script>
+        // Simple script to hide empty state when message is sent
+        const originalAppend = document.getElementById('chat-messages').appendChild;
+        // We need to wait for the DOM to be fully loaded or script.js to run
+        // But since this is at the end of body, it should be fine.
+        // However, a safer way is to modify script.js. 
+        // For now, let's just add a listener to the send button to hide the empty state.
+        document.getElementById('send-button').addEventListener('click', () => {
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) emptyState.style.display = 'none';
+        });
+        document.getElementById('prompt-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                const emptyState = document.getElementById('empty-state');
+                if (emptyState) emptyState.style.display = 'none';
+            }
+        });
+    </script>
 
 </body>
 

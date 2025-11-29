@@ -57,8 +57,19 @@ def handle_register(email: str = Form(...), password: str = Form(...)):
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            supabase_client.auth.sign_up({"email": email, "password": password})
-            return RedirectResponse(url="/login?message=Registration successful! Please check your email to confirm your account, then log in.", status_code=302)
+            # Prefer admin create to skip email confirmation
+            try:
+                supabase_client.auth.admin.create_user({"email": email, "password": password, "email_confirm": True})
+            except Exception as admin_error:
+                print(f"Admin create fallback to sign_up: {admin_error}")
+                supabase_client.auth.sign_up({"email": email, "password": password})
+
+            # Immediately sign the user in
+            user_session = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
+            response = RedirectResponse(url="/chat", status_code=302)
+            if user_session and user_session.session:
+                response.set_cookie(key="user-session", value=user_session.session.access_token, httponly=True)
+            return response
         except Exception as e:
             error_msg = str(e)
             

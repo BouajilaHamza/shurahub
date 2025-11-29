@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainNav = document.getElementById('main-nav');
     const feedbackForm = document.getElementById('feedback-form');
     const feedbackStatus = document.getElementById('feedback-status');
+    const siteHost = window.location.host;
 
     const sendAnalytics = (eventName, metadata = {}) => {
         fetch('/engagement/analytics', {
@@ -70,19 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Payment-ready plan buttons
-    document.querySelectorAll('.plan-cta').forEach((button) => {
-        button.addEventListener('click', () => {
-            const plan = button.dataset.plan || 'starter';
-            sendAnalytics('plan_interest', { plan });
-            const checkout = button.dataset.checkout;
-
-            if (checkout) {
-                window.open(checkout, '_blank', 'noopener');
-            } else {
-                window.location.href = '/register';
-            }
-        });
+    // Redirect any external links to the chat so users stay inside the app
+    document.querySelectorAll('a[href^="http"]').forEach((link) => {
+        const url = new URL(link.href);
+        if (url.host && url.host !== siteHost) {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                window.location.href = '/chat';
+            });
+        }
     });
 
     // Feedback capture
