@@ -831,7 +831,7 @@ body.sidebar-open .main-content {
     .chat-messages {
         padding: 1rem;
         /* leave enough space for the fixed input and safe area */
-        padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(140px + max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px)));
         overflow-x: hidden;
         /* Prevent horizontal scroll here too */
         width: 100%;
@@ -851,7 +851,8 @@ body.sidebar-open .main-content {
         right: 0;
         /* Keep input close to the bottom but above the safe area.  */
         --chat-input-bottom-offset: 4px;
-        bottom: calc(env(safe-area-inset-bottom, 0px) + var(--chat-input-bottom-offset));
+        bottom: calc(max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px)) + var(--chat-input-bottom-offset));
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
         z-index: 40;
     }
 
@@ -1015,7 +1016,7 @@ body.sidebar-open .main-content {
 
     .chat-messages {
         padding: 0.75rem;
-        padding-bottom: 130px;
+        padding-bottom: calc(130px + max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px)));
     }
 
     .message {
