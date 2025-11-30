@@ -157,6 +157,9 @@
 
     <script src="/static/js/script.js"></script>
     <script>
+        window.USER_IS_LOGGED_IN = {{ 'true' if user else 'false' }};
+    </script>
+    <script>
         // Simple script to hide empty state when message is sent
         const originalAppend = document.getElementById('chat-messages').appendChild;
         // We need to wait for the DOM to be fully loaded or script.js to run
@@ -174,6 +177,23 @@
             }
         });
     </script>
+
+    <!-- Register to Save Modal -->
+    <div id="register-save-modal" class="modal-container">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <button id="register-modal-close" class="modal-close-button">&times;</button>
+            <h3 style="margin-bottom: 0.5rem;">Save your analysis</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Create a free account to save this debate
+                and come back to it later.</p>
+            <div style="margin-top: 1.5rem;">
+                <a href="/register" id="btn-register-save" class="cta-button primary"
+                    style="width: 100%; justify-content: center; text-decoration: none;">Register Now</a>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                Already have an account? <a href="/login" style="color: var(--primary-color);">Login</a>
+            </p>
+        </div>
+    </div>
 
 </body>
 

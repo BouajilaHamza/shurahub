@@ -168,6 +168,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 setWorkingState(false);
                 setStatus('Ready for the next decision.');
+
+                // --- GA4 Key Events Implementation ---
+
+                // 1. initial_analysis_gen
+                // Fired when a user successfully completes the Quick-Start flow and generates their very first Decision Analysis.
+                const hasGenerated = localStorage.getItem('shurahub_first_analysis_generated');
+                if (!hasGenerated) {
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'initial_analysis_gen', {
+                            'event_category': 'onboarding',
+                            'event_label': 'first_groq_run'
+                        });
+                    }
+                    localStorage.setItem('shurahub_first_analysis_generated', 'true');
+                }
+
+                // 2. project_saved (for logged-in users) & 3. register_to_save (setup for guests)
+                if (window.USER_IS_LOGGED_IN) {
+                    // For logged-in users, the project is auto-saved by the backend.
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'project_saved', {
+                            'event_category': 'engagement',
+                            'event_label': 'auto_save_logged_in'
+                        });
+                    }
+                } else {
+                    // For guests, show "Save Analysis" button to trigger registration
+                    const debateActions = currentShurahubMessage.querySelector('.debate-actions');
+                    if (debateActions && !debateActions.querySelector('.save-analysis-btn')) {
+                        const saveBtn = document.createElement('button');
+                        saveBtn.className = 'view-debate-button save-analysis-btn';
+                        saveBtn.innerHTML = '<span class="label">Save Analysis</span>';
+                        saveBtn.style.marginLeft = '0.5rem';
+                        saveBtn.style.display = 'inline-flex'; // Ensure it's visible
+
+                        saveBtn.addEventListener('click', () => {
+                            const modal = document.getElementById('register-save-modal');
+                            if (modal) {
+                                modal.classList.add('active');
+                                // We don't track here, we track on the "Register Now" click in the modal
+                            }
+                        });
+
+                        debateActions.appendChild(saveBtn);
+                    }
+                }
             } else {
                 const role = data.role || 'update';
                 const entry = getOrCreateDebateEntry(role, data.sender);
@@ -385,4 +431,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     connect(); // Connect to the WebSocket on page load
+
+    // Register to Save Modal Logic
+    const registerSaveModal = document.getElementById('register-save-modal');
+    const registerModalClose = document.getElementById('register-modal-close');
+    const btnRegisterSave = document.getElementById('btn-register-save');
+
+    if (registerSaveModal) {
+        if (registerModalClose) {
+            registerModalClose.addEventListener('click', () => {
+                registerSaveModal.classList.remove('active');
+            });
+        }
+
+        // Close on click outside
+        registerSaveModal.addEventListener('click', (e) => {
+            if (e.target === registerSaveModal) {
+                registerSaveModal.classList.remove('active');
+            }
+        });
+
+        if (btnRegisterSave) {
+            btnRegisterSave.addEventListener('click', () => {
+                // Event 2: register_to_save
+                if (typeof gtag === 'function') {
+                    gtag('event', 'register_to_save', {
+                        'event_category': 'conversion_prompt',
+                        'event_label': 'guest_conversion_attempt'
+                    });
+                }
+            });
+        }
+    }
 });
