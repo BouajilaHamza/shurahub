@@ -32,7 +32,28 @@ body {
     padding: 1.5rem;
     box-sizing: border-box;
     transition: transform 0.3s ease;
-    z-index: 20;
+    z-index: 80;
+}
+
+/* When the sidebar is open on mobile, prevent page scrolling and dim the content */
+body.sidebar-open .main-content {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+/* Sidebar overlay to capture clicks and dim content */
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    background: rgba(0, 0, 0, 0);
+    z-index: 50;
+    pointer-events: none;
+}
+.sidebar-overlay.active {
+    display: block;
+    background: rgba(0, 0, 0, 0.25);
+    pointer-events: auto;
 }
 
 .sidebar-header .logo {
@@ -243,7 +264,7 @@ body {
 .eyebrow {
     font-size: 0.7rem;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
+    z-index: 60;
     color: var(--accent-primary);
     font-weight: 700;
     margin-bottom: 2px;
@@ -809,7 +830,8 @@ body {
 
     .chat-messages {
         padding: 1rem;
-        padding-bottom: 140px;
+        /* leave enough space for the fixed input and safe area */
+        padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
         overflow-x: hidden;
         /* Prevent horizontal scroll here too */
         width: 100%;
@@ -823,6 +845,14 @@ body {
         border-top: 1px solid var(--border-color);
         width: 100%;
         box-sizing: border-box;
+        /* Make input sticky and visible above browser UI on mobile */
+        position: fixed;
+        left: 0;
+        right: 0;
+        /* Keep input close to the bottom but above the safe area.  */
+        --chat-input-bottom-offset: 4px;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + var(--chat-input-bottom-offset));
+        z-index: 40;
     }
 
     .message {
@@ -930,12 +960,67 @@ body {
 
     /* Adjust input area */
     .chat-input {
-        padding: 0.5rem;
+        padding: 0.45rem 0.6rem;
     }
 
     #prompt-input {
         font-size: 16px;
     }
+}
+
+/* show header new debate button only on mobile */
+@media (max-width: 768px) {
+    #header-new-debate-btn {
+        display: inline-flex !important;
+        height: 40px;
+        width: 40px;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Sidebar close button: hidden on desktop, visible on mobile */
+#sidebar-close-btn {
+    display: none;
+}
+@media (max-width: 768px) {
+    #sidebar-close-btn {
+        display: inline-flex !important;
+        margin-left: auto;
+        height: 40px;
+        width: 40px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+    }
+}
+
+/* Make the hamburger menu visible on mobile */
+/* Hide by default on desktop */
+#mobile-menu-btn {
+    display: none;
+}
+@media (max-width: 768px) {
+    #mobile-menu-btn {
+        display: inline-flex !important;
+        height: 40px;
+        width: 40px;
+        align-items: center;
+        justify-content: center;
+        margin-right: 8px;
+    }
+
+    /* Keep header actions visible and compact */
+    .chat-header__actions {
+        gap: 8px;
+    }
+}
+
+/* Additional safety for small mobile and keyboard behavior */
+@supports (height: 100dvh) {
+    .command-center, .main-content { min-height: 100dvh; }
 }
 
 /* Small Mobile Devices */
@@ -979,6 +1064,15 @@ body {
         padding: 1.5rem;
         width: 95%;
     }
+}
+
+@media (max-width: 420px) {
+    .chat-input { padding: 0.35rem 0.5rem; }
+}
+
+/* Slightly smaller offset for very small devices */
+@media (max-width: 420px) {
+    .chat-input-container { --chat-input-bottom-offset: 2px; }
 }
 
 [data-theme="dark"] .chat-header {

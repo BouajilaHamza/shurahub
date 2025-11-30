@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ws.onopen = () => {
             setStatus('Connected. Start a new debate.');
+            updateChatHeight();
         };
         ws.onmessage = (event) => handleServerMessage(JSON.parse(event.data));
         ws.onclose = () => {
@@ -171,8 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setWorkingState(false);
                 setStatus('Ready for the next decision.');
 
-                // --- GA4 Key Events Implementation ---
+                        setWorkingState(false);
 
+                        updateChatHeight();
                 // 1. initial_analysis_gen
                 // Fired when a user successfully completes the Quick-Start flow and generates their very first Decision Analysis.
                 const hasGenerated = localStorage.getItem('shurahub_first_analysis_generated');
@@ -249,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lastPrompt = text;
         streamBuffers = {};
         appendUserMessage(text);
+        updateChatHeight();
         promptInput.value = '';
         resizePrompt();
         setWorkingState(true);
@@ -261,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = messageElement.querySelector('.message-content');
         content.textContent = text;
         chatMessages.appendChild(messageElement);
+        updateChatHeight();
     }
 
     function showTypingIndicator(sender) {
@@ -288,6 +292,22 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(() => {
             chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
         });
+    }
+
+    function updateChatHeight() {
+        const header = document.querySelector('.chat-header');
+        const inputContainer = document.querySelector('.chat-input-container');
+        const headerHeight = header ? header.getBoundingClientRect().height : 0;
+        const inputHeight = inputContainer ? inputContainer.getBoundingClientRect().height : 0;
+        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const margin = 16; // small breathing room
+        const chatHeight = Math.max(120, Math.floor(viewportHeight - headerHeight - inputHeight - margin));
+        if (chatMessages) {
+            chatMessages.style.height = `${chatHeight}px`;
+            chatMessages.style.paddingBottom = `${inputHeight + 4}px`;
+            chatMessages.style.scrollPadding = `0 ${inputHeight + 4}px`;
+            chatMessages.style.scrollPaddingBottom = `${inputHeight + 4}px`;
+        }
     }
 
     chatMessages.addEventListener('click', (event) => {
@@ -386,6 +406,54 @@ document.addEventListener('DOMContentLoaded', () => {
     promptInput.addEventListener('input', () => {
         resizePrompt();
         updateSendState();
+        updateChatHeight();
+    });
+
+    // Ensure the chat scrolls when input is focused on mobile so the input isn't hidden
+    promptInput.addEventListener('focus', () => {
+        setTimeout(() => {
+            scrollToBottom();
+            // Also adjust the chat input vertical position if the keyboard is visible.
+            adjustInputForKeyboard();
+        }, 250);
+    });
+    promptInput.addEventListener('blur', () => {
+        // Restore default bottom offset after blur
+        const inputContainer = document.querySelector('.chat-input-container');
+        if (inputContainer) {
+            inputContainer.style.bottom = '';
+        }
+    });
+
+    function adjustInputForKeyboard() {
+        const inputContainer = document.querySelector('.chat-input-container');
+        if (!inputContainer) return;
+        // Determine base offset from CSS variable to keep spec-driven spacing
+        const computedStyles = getComputedStyle(inputContainer);
+        const baseOffsetRaw = computedStyles.getPropertyValue('--chat-input-bottom-offset');
+        const baseOffset = baseOffsetRaw ? parseInt(baseOffsetRaw, 10) || 8 : 8;
+        if (window.visualViewport) {
+            const keyboardHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
+            // Avoid large jumps — we'll raise the input just a little when keyboard opens
+            // This keeps the input close to the bottom but prevents it from being hidden
+            const extra = keyboardHeight > 0 ? Math.min(24, Math.max(4, Math.round(keyboardHeight * 0.05))) : 0;
+            inputContainer.style.bottom = `calc(env(safe-area-inset-bottom, 0px) + ${baseOffset + extra}px)`;
+        } else {
+            inputContainer.style.bottom = `calc(env(safe-area-inset-bottom, 0px) + ${baseOffset}px)`;
+        }
+    }
+
+    // Listen for viewport changes (keyboard show/hide) in supported browsers
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+            // Only adjust if the prompt is focused (keyboard likely visible)
+            adjustInputForKeyboard();
+            updateChatHeight();
+        });
+    }
+
+    window.addEventListener('resize', () => {
+        updateChatHeight();
     });
 
     if (exampleButton) {
@@ -411,14 +479,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mobileMenuBtn) {
         mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
+            const opened = sidebar.classList.toggle('open');
+            overlay.classList.toggle('active', opened);
+            document.body.classList.toggle('sidebar-open', opened);
+            mobileMenuBtn.setAttribute('aria-expanded', String(opened));
         });
     }
 
     overlay.addEventListener('click', () => {
         sidebar.classList.remove('open');
         overlay.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
+    });
+
+    // Close sidebar via top-left close button in the sidebar header (mobile)
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+            if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    // Close sidebar on Escape key for accessibility
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+            if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // Close sidebar when a nav item is clicked (mobile behavior)
+    document.querySelectorAll('.sidebar .nav-item, .sidebar .sidebar-footer a').forEach((navItem) => {
+        navItem.addEventListener('click', () => {
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+                if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
     });
 
     // Redirect any external links to the chat to keep guests inside the product
@@ -564,6 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update history list active state
         populateHistoryList();
+        updateChatHeight();
         scrollToBottom();
     }
 
@@ -652,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     connect(); // Connect to the WebSocket on page load
+    updateChatHeight();
 
     // Register to Save Modal Logic
     const registerSaveModal = document.getElementById('register-save-modal');
@@ -705,6 +812,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (newDebateBtn) {
         newDebateBtn.addEventListener('click', () => {
             clearChat();
+        });
+    }
+
+    // Header New Debate button (mobile). Wire to clearChat() for quick access on phones.
+    const headerNewBtn = document.getElementById('header-new-debate-btn');
+    if (headerNewBtn) {
+        headerNewBtn.addEventListener('click', () => {
+            clearChat();
+            // If sidebar was open on mobile, close it
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
         });
     }
 

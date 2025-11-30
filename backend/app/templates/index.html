@@ -24,6 +24,9 @@
                     style="text-decoration: none; color: inherit; display: flex; align-items: center;">
                     <img alt="Shurahub Logo" style="height: 32px; width: auto;">
                 </a>
+                <button id="sidebar-close-btn" class="icon-button" aria-label="Close Menu" style="display:none; margin-left:auto;">
+                    &times;
+                </button>
             </div>
             <nav class="sidebar-nav">
                 <button id="new-debate-btn" class="nav-item"
@@ -59,7 +62,7 @@
         <main class="main-content">
             <header class="chat-header">
                 <div class="chat-header__left">
-                    <button id="mobile-menu-btn" class="icon-button" aria-label="Toggle Menu" style="display: none;">
+                    <button id="mobile-menu-btn" class="icon-button" aria-label="Toggle Menu">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -73,6 +76,12 @@
                     </div>
                 </div>
                 <div class="chat-header__actions">
+                    <button id="header-new-debate-btn" class="icon-button" aria-label="New Debate" title="New Debate" style="display:none;margin-right:0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 16px;">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
                     {% if not user %}
                     <span class="guest-pill"
                         title="You can use Shurahub without signing in. Responses won't be saved.">Guest
