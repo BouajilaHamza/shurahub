@@ -612,6 +612,8 @@ body {
     .command-center {
         flex-direction: column;
         height: 100dvh;
+        overflow-x: hidden;
+        /* Prevent horizontal scroll on main container */
     }
 
     .sidebar {
@@ -628,19 +630,123 @@ body {
     }
 
     .chat-header {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .chat-header__titles h1 {
+        font-size: 1.1rem;
     }
 
     .chat-messages {
         padding: 1rem;
+        padding-bottom: 140px;
+        overflow-x: hidden;
+        /* Prevent horizontal scroll here too */
+        width: 100%;
+        /* Ensure it doesn't grow beyond parent */
+        box-sizing: border-box;
     }
 
     .chat-input-container {
         padding: 1rem;
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .message {
+        max-width: 100%;
+        /* Allow full width, padding handles spacing */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .user-message {
         max-width: 90%;
+        /* Keep user messages slightly smaller */
+        margin-left: auto;
+    }
+
+    .user-message .message-content {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        /* Standard property */
+        word-break: break-word;
+        /* Fallback */
+    }
+
+    /* Improve readability for model responses */
+    .stream-text,
+    .final-answer {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+    }
+
+    .debate-container {
+        padding: 1rem;
+        margin-top: 1rem;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
+        /* Ensure debate container doesn't overflow */
+    }
+
+    .debate-entry {
+        padding-left: 1rem;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Make tables scrollable horizontally */
+    .stream-text table,
+    .final-answer table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+
+    /* Fix code block overflow */
+    .stream-text pre,
+    .final-answer pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-x: auto;
+        max-width: 100%;
+        background: var(--bg-primary);
+        padding: 1rem;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+
+    .stream-text code,
+    .final-answer code {
+        word-break: break-word;
+        white-space: pre-wrap;
+        /* Ensure inline code wraps */
+    }
+
+    /* Ensure images don't overflow */
+    .stream-text img,
+    .final-answer img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Adjust input area */
+    .chat-input {
+        padding: 0.5rem;
+    }
+
+    #prompt-input {
+        font-size: 16px;
     }
 }
 
@@ -655,6 +761,7 @@ body {
 [data-theme="dark"] .chat-status {
     background: rgba(15, 23, 42, 0.9);
 }
+
 /* --- Modal Styles --- */
 .modal-container {
     display: none;
@@ -693,6 +800,7 @@ body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
