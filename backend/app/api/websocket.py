@@ -23,6 +23,7 @@ async def websocket_endpoint(
     """Handles the WebSocket connection for the real-time debate, with authentication."""
     user = None
     user_id = None
+    visitor_id = websocket.query_params.get("visitor_id")
     try:
         cookie = websocket.cookies.get("user-session")
         if cookie:
@@ -33,6 +34,9 @@ async def websocket_endpoint(
     except Exception as e:
         # Guest mode should keep going even if Supabase is unhappy
         print(f"WebSocket auth skipped, continuing as guest: {e}")
+
+    if not user_id and visitor_id:
+        user_id = visitor_id
 
     await websocket.accept()
     print(f"WebSocket connection accepted for {'user ' + user_id if user_id else 'guest mode'}")
@@ -68,7 +72,7 @@ async def websocket_endpoint(
 
                 data = await websocket.receive_json()
                 user_message = data["text"]
-                user_id = user['id'] if user else None
+                user_id = user['id'] if user else visitor_id
                 
                 print(f"\n--- User Message from {user_id} ---: {user_message}")
                 await websocket.send_json({'sender': 'Shurahub', 'text': 'Initiating collaborative debate...', 'mode': 'guest' if not user_id else 'authenticated'})

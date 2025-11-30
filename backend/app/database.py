@@ -44,6 +44,14 @@ class AnalyticsEvent(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class Visitor(SQLModel, table=True):
+    """Model for anonymous or lightweight visitor sessions."""
+
+    visitor_id: str = Field(primary_key=True, description="Client-generated stable identifier")
+    username: str = Field(index=True, description="Human friendly label for analytics")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 # --- Database Engine & Session Management ---
 engine = create_engine(
     DATABASE_URL,
@@ -114,5 +122,25 @@ def record_analytics_event(
         logger.warning(
             "Failed to record analytics event '%s': %s. Skipping this event.",
             event_name,
+            exc,
+        )
+
+
+def save_visitor(visitor_id: str, username: str) -> None:
+    """Persist a visitor record if it does not already exist."""
+
+    try:
+        with Session(engine) as session:
+            existing = session.get(Visitor, visitor_id)
+            if existing:
+                return
+
+            visitor = Visitor(visitor_id=visitor_id, username=username)
+            session.add(visitor)
+            session.commit()
+    except Exception as exc:
+        logger.warning(
+            "Failed to save visitor %s: %s. Skipping this visitor log.",
+            visitor_id,
             exc,
         )

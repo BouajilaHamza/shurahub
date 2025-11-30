@@ -1,11 +1,44 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const promptInput = document.getElementById('prompt-input');
     const sendButton = document.getElementById('send-button');
     const chatMessages = document.getElementById('chat-messages');
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
     const converter = new showdown.Converter(); // Create a showdown converter
+
+    const ensureVisitor = async () => {
+        const storageKey = 'shurahubVisitor';
+        const existing = localStorage.getItem(storageKey);
+        if (existing) {
+            try {
+                return JSON.parse(existing);
+            } catch (e) {
+                console.warn('Unable to parse stored visitor info, regenerating.', e);
+            }
+        }
+
+        const visitorId = (crypto.randomUUID ? crypto.randomUUID() : `guest-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+        const username = `Guest-${visitorId.slice(0, 8)}`;
+
+        try {
+            await fetch('/engagement/visitor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ visitor_id: visitorId, username })
+            });
+        } catch (e) {
+            console.warn('Visitor registration failed; continuing anonymously.', e);
+        }
+
+        const payload = { visitor_id: visitorId, username };
+        localStorage.setItem(storageKey, JSON.stringify(payload));
+        return payload;
+    };
+
+    const visitor = await ensureVisitor();
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsPath = visitor?.visitor_id ? `/ws?visitor_id=${encodeURIComponent(visitor.visitor_id)}` : '/ws';
+    const ws = new WebSocket(`${protocol}//${window.location.host}${wsPath}`);
 
     ws.onopen = () => {
         console.log('WebSocket connection established');
