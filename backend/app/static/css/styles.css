@@ -979,23 +979,7 @@ body.sidebar-open .main-content {
     }
 }
 
-/* Sidebar close button: hidden on desktop, visible on mobile */
-#sidebar-close-btn {
-    display: none;
-}
-@media (max-width: 768px) {
-    #sidebar-close-btn {
-        display: inline-flex !important;
-        margin-left: auto;
-        height: 40px;
-        width: 40px;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        background: var(--bg-primary);
-        border: 1px solid var(--border-color);
-    }
-}
+/* Sidebar close button removed - overlay & menu button handle close */
 
 /* Make the hamburger menu visible on mobile */
 /* Hide by default on desktop */

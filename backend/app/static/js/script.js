@@ -493,16 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
     });
 
-    // Close sidebar via top-left close button in the sidebar header (mobile)
-    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
-    if (sidebarCloseBtn) {
-        sidebarCloseBtn.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-            document.body.classList.remove('sidebar-open');
-            if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
-        });
-    }
+    // Sidebar close behavior handled by overlay, nav item clicks, or hamburger toggle
 
     // Close sidebar on Escape key for accessibility
     document.addEventListener('keydown', (e) => {
