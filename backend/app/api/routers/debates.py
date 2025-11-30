@@ -4,7 +4,7 @@ from app.services.debate_service import DebateService
 from app.api.routers.auth import get_user_from_cookie
 from pydantic import BaseModel
 
-router = APIRouter()
+router = APIRouter(prefix="/api", tags=["debates"])
 
 def get_debate_service():
     return DebateService()

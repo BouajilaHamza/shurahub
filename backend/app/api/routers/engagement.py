@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, EmailStr, Field
 
 from app.core.config import supabase_client
-from app.database import record_analytics_event, save_feedback_entry
+from app.database import record_analytics_event, save_feedback_entry, save_visitor
 
 
 router = APIRouter(prefix="/engagement", tags=["engagement"])
@@ -19,6 +19,11 @@ class FeedbackRequest(BaseModel):
 class AnalyticsEventRequest(BaseModel):
     event_name: str = Field(..., min_length=2)
     metadata: Optional[Dict[str, Any]] = None
+
+
+class VisitorRequest(BaseModel):
+    visitor_id: str = Field(..., min_length=8, description="Client generated UUID")
+    username: str = Field(..., min_length=4, max_length=64, description="Friendly label for analytics")
 
 
 def _get_user_id(request: Request) -> Optional[str]:
@@ -45,4 +50,12 @@ async def capture_analytics(payload: AnalyticsEventRequest, request: Request):
     """Record lightweight analytics events for the landing page."""
     user_id = _get_user_id(request)
     record_analytics_event(payload.event_name, payload.metadata, user_id=user_id)
+    return {"status": "ok"}
+
+
+@router.post("/visitor")
+async def register_visitor(payload: VisitorRequest):
+    """Persist a visitor identity for anonymous usage tracking."""
+
+    save_visitor(visitor_id=payload.visitor_id, username=payload.username.strip())
     return {"status": "ok"}

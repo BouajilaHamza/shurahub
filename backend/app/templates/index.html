@@ -26,8 +26,27 @@
                 </a>
             </div>
             <nav class="sidebar-nav">
-                <a href="/" class="nav-item active">New Debate</a>
+                <button id="new-debate-btn" class="nav-item"
+                    style="cursor: pointer; background: none; border: none; text-align: left; width: 100%;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="min-width: 16px;">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Debate
+                </button>
                 <a href="/review" class="nav-item">Debate Archive</a>
+
+                {% if user %}
+                <div class="history-section">
+                    <div class="history-header">Recent Debates</div>
+                    <div id="history-list" class="history-list">
+                        <!-- Populated by JavaScript -->
+                        <div class="history-loading">Loading...</div>
+                    </div>
+                </div>
+                {% endif %}
             </nav>
             <div class="sidebar-footer">
                 {% if user %}
@@ -40,7 +59,7 @@
         <main class="main-content">
             <header class="chat-header">
                 <div class="chat-header__left">
-                    <button id="mobile-menu-btn" class="icon-button" aria-label="Toggle Menu" style="display: none;">
+                    <button id="mobile-menu-btn" class="icon-button" aria-label="Toggle Menu">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -54,6 +73,12 @@
                     </div>
                 </div>
                 <div class="chat-header__actions">
+                    <button id="header-new-debate-btn" class="icon-button" aria-label="New Debate" title="New Debate" style="display:none;margin-right:0.5rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 16px;">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
                     {% if not user %}
                     <span class="guest-pill"
                         title="You can use Shurahub without signing in. Responses won't be saved.">Guest
@@ -81,13 +106,12 @@
                             <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Ask the council to weigh in
                                 on a complex decision.</p>
                             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                <button class="ghost-button"
-                                    onclick="document.getElementById('prompt-input').value = 'Compare Next.js vs. Astro for a content site'; document.getElementById('prompt-input').focus();"
+                                <button class="ghost-button" data-prompt="Compare Next.js vs. Astro for a content site"
                                     style="text-align: left; border: 1px solid var(--border-color); background: var(--bg-primary);">
                                     Compare Next.js vs. Astro
                                 </button>
                                 <button class="ghost-button"
-                                    onclick="document.getElementById('prompt-input').value = 'Should I use a relational or NoSQL database for a social app?'; document.getElementById('prompt-input').focus();"
+                                    data-prompt="Should I use a relational or NoSQL database for a social app?"
                                     style="text-align: left; border: 1px solid var(--border-color); background: var(--bg-primary);">
                                     Relational vs. NoSQL DB
                                 </button>
@@ -157,6 +181,9 @@
 
     <script src="/static/js/script.js"></script>
     <script>
+        window.USER_IS_LOGGED_IN = {{ 'true' if user else 'false' }};
+    </script>
+    <script>
         // Simple script to hide empty state when message is sent
         const originalAppend = document.getElementById('chat-messages').appendChild;
         // We need to wait for the DOM to be fully loaded or script.js to run
@@ -174,6 +201,23 @@
             }
         });
     </script>
+
+    <!-- Register to Save Modal -->
+    <div id="register-save-modal" class="modal-container">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <button id="register-modal-close" class="modal-close-button">&times;</button>
+            <h3 style="margin-bottom: 0.5rem;">Save your analysis</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Create a free account to save this debate
+                and come back to it later.</p>
+            <div style="margin-top: 1.5rem;">
+                <a href="/register" id="btn-register-save" class="cta-button primary"
+                    style="width: 100%; justify-content: center; text-decoration: none;">Register Now</a>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                Already have an account? <a href="/login" style="color: var(--primary-color);">Login</a>
+            </p>
+        </div>
+    </div>
 
 </body>
 

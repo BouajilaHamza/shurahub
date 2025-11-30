@@ -134,8 +134,12 @@ document.addEventListener('DOMContentLoaded', () => {
         responses.forEach(({ role, data, finalName, rating }) => {
             if (!data) return;
 
+            // Data may be a string (legacy records) or an object { model, response }
+            const modelName = typeof data === 'string' ? 'Model' : (data.model || 'Model');
+            const responseText = typeof data === 'string' ? data : (data.response || '');
+
             const responseDiv = createElement('div', `response ${role}`);
-            responseDiv.innerHTML = `<strong>${finalName || role.charAt(0).toUpperCase() + role.slice(1)} (${data.model}):</strong><p>${data.response}</p>`;
+            responseDiv.innerHTML = `<strong>${finalName || role.charAt(0).toUpperCase() + role.slice(1)} (${modelName}):</strong><p>${responseText}</p>`;
 
             if (role === 'opener' || role === 'synthesizer') {
                 const rater = role === 'synthesizer' ? 'final' : 'opener';
