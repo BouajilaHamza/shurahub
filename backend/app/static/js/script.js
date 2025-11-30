@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastPrompt = '';
     let isAwaitingResponse = false;
     let streamBuffers = {};
+    let currentDebateId = null; // Track which debate is currently loaded
+    let debates = []; // Store fetched debates
 
     const examplePrompt = "Decide between Next.js and Astro for a 3k-page content site that updates daily.";
 
@@ -430,6 +432,225 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- History Management ---
+    async function fetchDebates() {
+        const historyList = document.getElementById('history-list');
+
+        if (!window.USER_IS_LOGGED_IN) {
+            // User is not logged in, show helpful message
+            if (historyList) {
+                historyList.innerHTML = '<div class="history-empty">Log in to see your debates</div>';
+            }
+            return;
+        }
+
+        console.log('[History] Fetching debates...');
+
+        try {
+            const response = await fetch('/api/debates', {
+                credentials: 'include' // Send cookies for authentication
+            });
+
+            console.log('[History] Response status:', response.status);
+
+            if (!response.ok) {
+                console.error('[History] Response not OK:', response.status, response.statusText);
+                throw new Error('Failed to fetch debates');
+            }
+
+            debates = await response.json();
+            console.log('[History] Fetched debates:', debates.length, 'debates');
+
+            populateHistoryList();
+
+            // Auto-load the most recent debate if available
+            if (debates.length > 0 && !currentDebateId) {
+                console.log('[History] Auto-loading most recent debate');
+                loadDebate(debates[0]);
+            }
+        } catch (error) {
+            console.error('[History] Error fetching debates:', error);
+            if (historyList) {
+                historyList.innerHTML = '<div class="history-empty">Failed to load debates</div>';
+            }
+        }
+    }
+
+    function populateHistoryList() {
+        const historyList = document.getElementById('history-list');
+        if (!historyList) return;
+
+        if (debates.length === 0) {
+            historyList.innerHTML = '<div class="history-empty">No debates yet</div>';
+            return;
+        }
+
+        historyList.innerHTML = debates.slice(0, 10).map(debate => {
+            const date = new Date(debate.timestamp);
+            const timeAgo = getTimeAgo(date);
+            const isActive = currentDebateId === debate.debate_id;
+
+            return `
+                <div class="history-item ${isActive ? 'active' : ''}" data-debate-id="${debate.debate_id}">
+                    <div class="history-item-prompt">${escapeHtml(debate.user_prompt)}</div>
+                    <div class="history-item-time">${timeAgo}</div>
+                </div>
+            `;
+        }).join('');
+
+        // Attach click handlers
+        historyList.querySelectorAll('.history-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const debateId = item.dataset.debateId;
+                const debate = debates.find(d => d.debate_id === debateId);
+                if (debate) loadDebate(debate);
+            });
+        });
+    }
+
+    function loadDebate(debate) {
+        // Clear current chat
+        chatMessages.innerHTML = '';
+        currentShurahubMessage = null;
+        streamBuffers = {};
+        currentDebateId = debate.debate_id;
+
+        // Add user message
+        appendUserMessage(debate.user_prompt);
+
+        // Create Shurahub message with debate content
+        const messageElement = shurahubMessageTemplate.content.cloneNode(true);
+        chatMessages.appendChild(messageElement);
+        currentShurahubMessage = chatMessages.lastElementChild;
+
+        const debateContent = currentShurahubMessage.querySelector('.debate-content');
+
+        // Add opener
+        if (debate.opener) {
+            const openerEntry = createDebateEntry('opener', 'Opener', debate.opener);
+            debateContent.appendChild(openerEntry);
+        }
+
+        // Add critiquer
+        if (debate.critiquer) {
+            const critiquerEntry = createDebateEntry('critiquer', 'Critiquer', debate.critiquer);
+            debateContent.appendChild(critiquerEntry);
+        }
+
+        // Add synthesizer to final answer
+        if (debate.synthesizer) {
+            const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
+            if (finalAnswer) {
+                const synthStr = (typeof debate.synthesizer === 'string')
+                    ? debate.synthesizer
+                    : (debate.synthesizer?.response || JSON.stringify(debate.synthesizer || {}));
+                finalAnswer.innerHTML = marked.parse(synthStr);
+            }
+            const synthesizerEntry = createDebateEntry('synthesizer', 'Judge', debate.synthesizer);
+            debateContent.appendChild(synthesizerEntry);
+        }
+
+        // Show debate transcript button and feedback
+        const viewDebateButton = currentShurahubMessage.querySelector('.view-debate-button');
+        if (viewDebateButton) {
+            viewDebateButton.style.display = 'inline-flex';
+        }
+        const feedbackBlock = currentShurahubMessage.querySelector('.response-feedback');
+        if (feedbackBlock) {
+            feedbackBlock.hidden = false;
+            const finalAnsText = (typeof debate.synthesizer === 'string') ? debate.synthesizer : (debate.synthesizer?.response || '');
+            wireResponseFeedback(feedbackBlock, finalAnsText, debate.user_prompt);
+        }
+
+        // Update history list active state
+        populateHistoryList();
+        scrollToBottom();
+    }
+
+    function createDebateEntry(role, label, content) {
+        const entry = document.createElement('div');
+        entry.classList.add('debate-entry');
+        entry.dataset.role = role;
+
+        const heading = document.createElement('div');
+        heading.className = 'debate-heading';
+
+        const roleBadge = document.createElement('span');
+        roleBadge.className = `role-badge ${role}`;
+        roleBadge.textContent = label;
+
+        const modelChip = document.createElement('span');
+        modelChip.className = 'model-chip';
+        // content can be a string or an object with shape {model, response}
+        if (content && typeof content === 'object') {
+            modelChip.textContent = content.model || 'Model';
+        } else {
+            modelChip.textContent = 'Model';
+        }
+
+        heading.appendChild(roleBadge);
+        heading.appendChild(modelChip);
+
+        const body = document.createElement('div');
+        body.className = 'stream-text';
+
+        // Ensure content is a string before parsing and handle object shapes (model, response)
+        let contentStr = '';
+        if (typeof content === 'string') {
+            contentStr = content;
+        } else if (content && typeof content === 'object') {
+            contentStr = content.response || JSON.stringify(content);
+        } else {
+            contentStr = '';
+        }
+        body.innerHTML = marked.parse(contentStr);
+
+        entry.appendChild(heading);
+        entry.appendChild(body);
+
+        return entry;
+    }
+
+    function clearChat() {
+        chatMessages.innerHTML = '';
+        currentShurahubMessage = null;
+        streamBuffers = {};
+        currentDebateId = null;
+        promptInput.value = '';
+        resizePrompt();
+        updateSendState();
+        populateHistoryList();
+        setStatus('Ready for a new debate.');
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+
+        const intervals = {
+            year: 31536000,
+            month: 2592000,
+            week: 604800,
+            day: 86400,
+            hour: 3600,
+            minute: 60
+        };
+
+        for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+            const interval = Math.floor(seconds / secondsInUnit);
+            if (interval >= 1) {
+                return `${interval} ${unit}${interval !== 1 ? 's' : ''} ago`;
+            }
+        }
+
+        return 'Just now';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     connect(); // Connect to the WebSocket on page load
 
     // Register to Save Modal Logic
@@ -478,4 +699,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // New Debate button
+    const newDebateBtn = document.getElementById('new-debate-btn');
+    if (newDebateBtn) {
+        newDebateBtn.addEventListener('click', () => {
+            clearChat();
+        });
+    }
+
+    // Fetch debates on page load (for logged-in users)
+    if (window.USER_IS_LOGGED_IN) {
+        fetchDebates();
+    }
 });
