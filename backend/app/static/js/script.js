@@ -463,4 +463,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    // Handle Ghost Buttons (Suggested Questions)
+    // Handle Ghost Buttons (Suggested Questions) - Event Delegation
+    document.body.addEventListener('click', (event) => {
+        const btn = event.target.closest('.ghost-button');
+        if (btn) {
+            const prompt = btn.dataset.prompt;
+            if (prompt) {
+                promptInput.value = prompt;
+                resizePrompt();
+                updateSendState();
+                sendMessage();
+            }
+        }
+    });
 });
