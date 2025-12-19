@@ -18,23 +18,30 @@ body {
     line-height: 1.5;
 }
 
-/* Design Tokens */
-/* Design Tokens - Future Prime */
+/* ============================================
+   Design Tokens - New UX Color Scheme
+   ============================================ */
+
 :root {
     /* Light Mode (Default) */
     --bg-primary: #FFFFFF;
-    --bg-secondary: #F8FAFC;
-    --text-primary: #0F172A;
-    --text-secondary: #475569;
-    --accent-primary: #7C3AED;
-    /* Violet */
-    --accent-secondary: #DB2777;
-    /* Pink */
-    --accent-gradient: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
-    --accent-gradient-hover: linear-gradient(135deg, #6D28D9 0%, #BE185D 100%);
+    --bg-secondary: #F9FAFB;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
 
-    --border-color: #E2E8F0;
-    --glass-bg: rgba(255, 255, 255, 0.7);
+    /* Accent Colors - Violet to Pink Gradient */
+    --accent-primary: #8B5CF6;
+    --accent-secondary: #EC4899;
+    --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    --accent-gradient-hover: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
+
+    /* Border & Surface */
+    --border-color: #E5E7EB;
+    --surface-light: #F9FAFB;
+    --surface-dark: #1F2937;
+
+    /* Glass Effects */
+    --glass-bg: rgba(255, 255, 255, 0.8);
     --glass-border: rgba(255, 255, 255, 0.5);
 
     /* Spacing */
@@ -44,9 +51,10 @@ body {
     --spacing-lg: 2rem;
 
     /* Radius */
-    --radius-sm: 8px;
-    --radius-md: 16px;
-    --radius-lg: 24px;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
     --radius-full: 9999px;
 
     /* Shadows */
@@ -54,38 +62,46 @@ body {
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
-    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.15);
+    --shadow-glow: 0 0 15px rgba(139, 92, 246, 0.3);
 
-    /* Legacy Support Mappings */
-    --bg-container: var(--bg-secondary);
-    --border: var(--border-color);
-    --accent-gold: var(--accent-primary);
-    --accent-hover: var(--accent-secondary);
+    /* Status Colors */
     --error: #EF4444;
     --success: #10B981;
+    --warning: #F59E0B;
+    --info: #3B82F6;
 }
 
 [data-theme="dark"] {
     /* Dark Mode */
-    --bg-primary: #020617;
-    --bg-secondary: #0F172A;
-    --text-primary: #F8FAFC;
-    --text-secondary: #94A3B8;
+    --bg-primary: #111827;
+    --bg-secondary: #1F2937;
+    --text-primary: #F9FAFB;
+    --text-secondary: #9CA3AF;
+
+    /* Accent Colors */
     --accent-primary: #8B5CF6;
     --accent-secondary: #EC4899;
     --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
-    --accent-gradient-hover: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
+    --accent-gradient-hover: linear-gradient(135deg, #A78BFA 0%, #F472B6 100%);
 
-    --border-color: #1E293B;
-    --glass-bg: rgba(15, 23, 42, 0.6);
+    /* Border & Surface */
+    --border-color: #374151;
+
+    /* Glass Effects */
+    --glass-bg: rgba(17, 24, 39, 0.8);
     --glass-border: rgba(255, 255, 255, 0.1);
 
+    /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3);
-    --shadow-glow: 0 0 25px rgba(139, 92, 246, 0.2);
+    --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.25);
 }
+
+/* ============================================
+   Base Styles
+   ============================================ */
 
 a {
     color: inherit;
@@ -97,27 +113,125 @@ button {
     font-family: inherit;
 }
 
-/* Animations */
+/* ============================================
+   Animations
+   ============================================ */
+
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
-/* Logo Theme Switching */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ============================================
+   Logo Theme Switching
+   ============================================ */
+
 .logo img {
     content: url('/static/images/logo-black.svg');
 }
 
 [data-theme="dark"] .logo img {
     content: url('/static/images/logo-white.svg');
+}
+
+/* ============================================
+   Selection Styling
+   ============================================ */
+
+::selection {
+    background: var(--accent-primary);
+    color: #fff;
+}
+
+::-moz-selection {
+    background: var(--accent-primary);
+    color: #fff;
+}
+
+/* ============================================
+   Scrollbar Styling (for browsers that support it)
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+.gradient-text {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
 }

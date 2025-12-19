@@ -19,6 +19,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const examplePrompt = "Decide between Next.js and Astro for a 3k-page content site that updates daily.";
 
+    // Mobile detection and tracking
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        || window.innerWidth <= 768;
+    const sessionStartTime = Date.now();
+    let hasTrackedFirstPrompt = false;
+
+    // Track mobile page view
+    if (isMobile && typeof gtag === 'function') {
+        gtag('event', 'mobile_page_view', {
+            'event_category': 'mobile',
+            'event_label': 'mobile_session_start',
+            'screen_width': window.innerWidth,
+            'user_logged_in': window.USER_IS_LOGGED_IN || false
+        });
+    }
+
+    // Track session time on page unload
+    window.addEventListener('beforeunload', () => {
+        if (isMobile && typeof gtag === 'function') {
+            const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000);
+            gtag('event', 'mobile_session_time', {
+                'event_category': 'mobile',
+                'event_label': 'session_duration',
+                'value': sessionDuration
+            });
+        }
+    });
+
+
     function setStatus(message, isActive = false) {
         if (!statusBar) return;
         statusBar.textContent = message;
@@ -95,24 +124,79 @@ document.addEventListener('DOMContentLoaded', () => {
         return entry;
     }
 
+    // Debounce timer and pending updates for smooth streaming
+    let streamUpdateTimer = null;
+    let pendingStreamUpdates = {};
+    const STREAM_RENDER_DELAY = 100; // ms between renders for smoothness (ChatGPT uses ~100ms)
+
     function handleStreamChunk(data) {
         if (!currentShurahubMessage) return;
         const role = data.role || data.sender || 'stream';
         streamBuffers[role] = (streamBuffers[role] || '') + data.text;
-        const entry = getOrCreateDebateEntry(role, data.sender);
-        if (!entry) return;
-        const textTarget = entry.querySelector('.stream-text');
-        if (textTarget) {
-            textTarget.innerHTML = marked.parse(streamBuffers[role]);
-        }
 
-        if (role === 'synthesizer') {
-            const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
-            if (finalAnswer) {
-                finalAnswer.innerHTML = marked.parse(streamBuffers[role]);
-            }
+        // Mark this role as needing an update
+        pendingStreamUpdates[role] = {
+            sender: data.sender,
+            content: streamBuffers[role]
+        };
+
+        // Debounce the actual DOM update for smoother rendering
+        if (!streamUpdateTimer) {
+            streamUpdateTimer = setTimeout(() => {
+                requestAnimationFrame(() => {
+                    flushStreamUpdates();
+                    streamUpdateTimer = null;
+                });
+            }, STREAM_RENDER_DELAY);
         }
-        scrollToBottom();
+    }
+
+    function flushStreamUpdates() {
+        if (!currentShurahubMessage) return;
+
+        Object.entries(pendingStreamUpdates).forEach(([role, update]) => {
+            const entry = getOrCreateDebateEntry(role, update.sender);
+            if (!entry) return;
+
+            const textTarget = entry.querySelector('.stream-text');
+            if (textTarget) {
+                // Add streaming class for cursor animation
+                textTarget.classList.add('streaming');
+
+                // Use a more efficient way to update - only if content changed
+                const newHtml = marked.parse(update.content);
+                if (textTarget.innerHTML !== newHtml) {
+                    textTarget.innerHTML = newHtml;
+                }
+            }
+
+            // Update final answer for synthesizer
+            if (role === 'synthesizer') {
+                const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
+                if (finalAnswer) {
+                    // Add streaming class for cursor animation
+                    finalAnswer.classList.add('streaming');
+
+                    const newHtml = marked.parse(update.content);
+                    if (finalAnswer.innerHTML !== newHtml) {
+                        finalAnswer.innerHTML = newHtml;
+                    }
+                }
+            }
+        });
+
+        // Clear pending updates
+        pendingStreamUpdates = {};
+
+        // Scroll after content update - use requestAnimationFrame for smooth timing
+        requestAnimationFrame(scrollToBottom);
+    }
+
+    // Helper function to remove streaming indicators when done
+    function removeStreamingIndicators() {
+        if (!currentShurahubMessage) return;
+        const streamingElements = currentShurahubMessage.querySelectorAll('.streaming');
+        streamingElements.forEach(el => el.classList.remove('streaming'));
     }
 
     function handleServerMessage(data) {
@@ -136,8 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentShurahubMessage = chatMessages.lastElementChild;
             streamBuffers = {};
             setWorkingState(true);
+            setStreamingState(true);  // Enable streaming mode for instant scroll
             setStatus(data.mode === 'guest' ? 'Guest session: warming up the council...' : 'Council warming up...', true);
-            scrollToBottom();
+            scrollToBottom();  // Scroll to bottom for initial position
             return;
         }
 
@@ -154,15 +239,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const answer = data.text.replace('**Final Verdict:**', '').trim();
                 finalAnswer.innerHTML = marked.parse(answer || streamBuffers['synthesizer'] || '');
                 const viewDebateButton = currentShurahubMessage.querySelector('.view-debate-button');
-                if (viewDebateButton) {
+                const debateContainer = currentShurahubMessage.querySelector('.debate-container');
+
+                if (viewDebateButton && debateContainer) {
                     viewDebateButton.style.display = 'inline-flex';
                     viewDebateButton.setAttribute('aria-expanded', 'false');
                     const label = viewDebateButton.querySelector('.label');
                     const chevron = viewDebateButton.querySelector('.chevron');
                     if (label) label.textContent = 'Open debate transcript';
                     if (chevron) chevron.style.transform = 'rotate(0deg)';
-                    const debateContainer = currentShurahubMessage.querySelector('.debate-container');
-                    if (debateContainer) debateContainer.hidden = true;
+                    debateContainer.hidden = true;
                 }
                 const feedbackBlock = currentShurahubMessage.querySelector('.response-feedback');
                 if (feedbackBlock) {
@@ -172,9 +258,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 setWorkingState(false);
                 setStatus('Ready for the next decision.');
 
-                        setWorkingState(false);
+                // Remove streaming cursor indicators and disable streaming mode
+                removeStreamingIndicators();
+                setStreamingState(false);  // Disable streaming mode, smooth scroll resumes
 
-                        updateChatHeight();
+                setWorkingState(false);
+
+                updateChatHeight();
                 // 1. initial_analysis_gen
                 // Fired when a user successfully completes the Quick-Start flow and generates their very first Decision Analysis.
                 const hasGenerated = localStorage.getItem('shurahub_first_analysis_generated');
@@ -187,6 +277,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     localStorage.setItem('shurahub_first_analysis_generated', 'true');
                 }
+
+                // Track mobile debate completion
+                if (isMobile && typeof gtag === 'function') {
+                    gtag('event', 'mobile_debate_complete', {
+                        'event_category': 'mobile',
+                        'event_label': 'debate_finished',
+                        'user_logged_in': window.USER_IS_LOGGED_IN || false
+                    });
+                }
+
+                // Calculate and display debate weight meter
+                updateDebateWeightMeter();
 
                 // 2. project_saved (for logged-in users) & 3. register_to_save (setup for guests)
                 if (window.USER_IS_LOGGED_IN) {
@@ -247,6 +349,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Track first prompt on mobile
+        if (isMobile && !hasTrackedFirstPrompt && typeof gtag === 'function') {
+            gtag('event', 'mobile_first_prompt', {
+                'event_category': 'mobile',
+                'event_label': 'first_question_submitted',
+                'user_logged_in': window.USER_IS_LOGGED_IN || false
+            });
+            hasTrackedFirstPrompt = true;
+        }
+
         ws.send(JSON.stringify({ text }));
         lastPrompt = text;
         streamBuffers = {};
@@ -288,10 +400,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Simple scroll - works on both desktop and mobile
+    const scrollAnchor = document.getElementById('scroll-anchor');
+    let isStreaming = false;
+    const isMobileDevice = window.innerWidth <= 767;
+
     function scrollToBottom() {
-        requestAnimationFrame(() => {
-            chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
-        });
+        // Simple direct scroll to bottom - works on all devices
+        if (chatMessages) {
+            // Use instant scroll to prevent jitter
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+
+    function setStreamingState(streaming) {
+        isStreaming = streaming;
+        // When streaming starts, ensure we're at the bottom
+        if (streaming) {
+            scrollToBottom();
+        }
     }
 
     function updateChatHeight() {
@@ -325,8 +452,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (chevron) {
                 chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
             }
+
+            // Track mobile transcript views
+            if (isMobile && isHidden && typeof gtag === 'function') {
+                gtag('event', 'mobile_transcript_view', {
+                    'event_category': 'mobile',
+                    'event_label': 'debate_transcript_opened'
+                });
+            }
         }
     });
+
 
     function resizePrompt() {
         promptInput.style.height = 'auto';
@@ -588,21 +724,177 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <div class="history-item ${isActive ? 'active' : ''}" data-debate-id="${debate.debate_id}">
-                    <div class="history-item-prompt">${escapeHtml(debate.user_prompt)}</div>
-                    <div class="history-item-time">${timeAgo}</div>
+                    <div class="history-item-content">
+                        <div class="history-item-prompt">${escapeHtml(debate.user_prompt)}</div>
+                        <div class="history-item-time">${timeAgo}</div>
+                    </div>
+                    <div class="history-item-actions">
+                        <button class="history-action-btn" aria-label="More options" data-debate-id="${debate.debate_id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="12" cy="5" r="1"></circle>
+                                <circle cx="12" cy="19" r="1"></circle>
+                            </svg>
+                        </button>
+                        <div class="history-dropdown" data-debate-id="${debate.debate_id}">
+                            <button class="history-dropdown-item delete-debate" data-debate-id="${debate.debate_id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                                Delete
+                            </button>
+                            <button class="history-dropdown-item share-debate" data-debate-id="${debate.debate_id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                                Share
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `;
         }).join('');
 
+
         // Attach click handlers
         historyList.querySelectorAll('.history-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const debateId = item.dataset.debateId;
-                const debate = debates.find(d => d.debate_id === debateId);
-                if (debate) loadDebate(debate);
-            });
+            // Click on the main item content to load debate
+            const itemContent = item.querySelector('.history-item-content');
+            if (itemContent) {
+                itemContent.addEventListener('click', () => {
+                    const debateId = item.dataset.debateId;
+                    const debate = debates.find(d => d.debate_id === debateId);
+                    if (debate) loadDebate(debate);
+                });
+            }
+
+            // 3-dot menu toggle
+            const actionBtn = item.querySelector('.history-action-btn');
+            const dropdown = item.querySelector('.history-dropdown');
+            if (actionBtn && dropdown) {
+                actionBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent item click
+
+                    // Close all other dropdowns
+                    document.querySelectorAll('.history-dropdown').forEach(dd => {
+                        if (dd !== dropdown) dd.classList.remove('active');
+                    });
+
+                    dropdown.classList.toggle('active');
+                });
+            }
+
+            // Delete button
+            const deleteBtn = item.querySelector('.delete-debate');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const debateId = deleteBtn.dataset.debateId;
+
+                    if (!confirm('Are you sure you want to delete this debate?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/debates/${debateId}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            // Remove from debates array
+                            debates = debates.filter(d => d.debate_id !== debateId);
+
+                            // If the deleted debate was active, clear the chat
+                            if (currentDebateId === debateId) {
+                                clearChat();
+                            }
+
+                            // Refresh the history list
+                            populateHistoryList();
+
+                            // Close dropdown
+                            dropdown.classList.remove('active');
+                        } else {
+                            alert('Failed to delete debate');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting debate:', error);
+                        alert('Failed to delete debate');
+                    }
+                });
+            }
+
+            // Share button
+            const shareBtn = item.querySelector('.share-debate');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const debateId = shareBtn.dataset.debateId;
+                    const debate = debates.find(d => d.debate_id === debateId);
+
+                    if (!debate) return;
+
+                    // Create shareable text
+                    const shareText = `Check out this debate: "${debate.user_prompt}"`;
+                    const shareUrl = `${window.location.origin}/debate/${debateId}`;
+
+                    // Try to use Web Share API if available
+                    if (navigator.share) {
+                        try {
+                            await navigator.share({
+                                title: 'Shurahub Debate',
+                                text: shareText,
+                                url: shareUrl
+                            });
+                            dropdown.classList.remove('active');
+                        } catch (err) {
+                            if (err.name !== 'AbortError') {
+                                console.error('Error sharing:', err);
+                            }
+                        }
+                    } else {
+                        // Fallback: copy to clipboard
+                        try {
+                            await navigator.clipboard.writeText(shareUrl);
+
+                            // Show feedback
+                            const originalText = shareBtn.innerHTML;
+                            shareBtn.innerHTML = `
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Copied!
+                            `;
+
+                            setTimeout(() => {
+                                shareBtn.innerHTML = originalText;
+                                dropdown.classList.remove('active');
+                            }, 1500);
+                        } catch (err) {
+                            console.error('Error copying to clipboard:', err);
+                            alert('Failed to copy link');
+                        }
+                    }
+                });
+            }
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.history-item-actions')) {
+                document.querySelectorAll('.history-dropdown').forEach(dd => {
+                    dd.classList.remove('active');
+                });
+            }
         });
     }
+
 
     function loadDebate(debate) {
         // Clear current chat
@@ -720,6 +1012,79 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('Ready for a new debate.');
     }
 
+    function updateDebateWeightMeter() {
+        if (!currentShurahubMessage) return;
+
+        const weightMeter = currentShurahubMessage.querySelector('.debate-weight-meter');
+        if (!weightMeter) return;
+
+        // Get debate content lengths (simple heuristic for now)
+        const openerText = streamBuffers['opener'] || '';
+        const critiquerText = streamBuffers['critiquer'] || '';
+
+        // Calculate weights based on content length (you can make this more sophisticated)
+        const openerLength = openerText.trim().length;
+        const critiquerLength = critiquerText.trim().length;
+        const total = openerLength + critiquerLength;
+
+        if (total === 0) {
+            // Default to 50/50 if no data
+            weightMeter.style.display = 'none';
+            return;
+        }
+
+        // Calculate percentages
+        const openerPercent = Math.round((openerLength / total) * 100);
+        const critiquerPercent = 100 - openerPercent;
+
+        // Update the meter
+        const openerBar = weightMeter.querySelector('.weight-opener');
+        const critiquerBar = weightMeter.querySelector('.weight-critiquer');
+        const insightText = weightMeter.querySelector('.weight-insight-text');
+
+        if (openerBar && critiquerBar) {
+            // Animate the bars
+            setTimeout(() => {
+                openerBar.style.width = `${openerPercent}%`;
+                critiquerBar.style.width = `${critiquerPercent}%`;
+
+                // Update percentages
+                const openerPercentSpan = openerBar.querySelector('.weight-percent');
+                const critiquerPercentSpan = critiquerBar.querySelector('.weight-percent');
+
+                if (openerPercentSpan) openerPercentSpan.textContent = `${openerPercent}%`;
+                if (critiquerPercentSpan) critiquerPercentSpan.textContent = `${critiquerPercent}%`;
+            }, 100);
+        }
+
+        // Generate insight text
+        if (insightText) {
+            let insight = '';
+            const diff = Math.abs(openerPercent - critiquerPercent);
+
+            if (diff < 10) {
+                insight = 'This was a balanced debate with both sides contributing equally.';
+            } else if (openerPercent > critiquerPercent) {
+                if (diff > 30) {
+                    insight = `This decision strongly favored the Opener's arguments (${openerPercent}% weight).`;
+                } else {
+                    insight = `The Opener's perspective had slightly more influence on this decision.`;
+                }
+            } else {
+                if (diff > 30) {
+                    insight = `The Critiquer's counterarguments significantly shaped this decision (${critiquerPercent}% weight).`;
+                } else {
+                    insight = `The Critiquer's concerns were given slightly more consideration.`;
+                }
+            }
+
+            insightText.textContent = insight;
+        }
+
+        // Show the meter with animation
+        weightMeter.style.display = 'block';
+    }
+
     function getTimeAgo(date) {
         const seconds = Math.floor((new Date() - date) / 1000);
 
@@ -783,10 +1148,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Handle Ghost Buttons (Suggested Questions)
-    // Handle Ghost Buttons (Suggested Questions) - Event Delegation
+    // Handle Quick Start Prompts - Event Delegation
+
     document.body.addEventListener('click', (event) => {
-        const btn = event.target.closest('.ghost-button');
+        const btn = event.target.closest('.ghost-button, .quick-start-prompt');
         if (btn) {
             const prompt = btn.dataset.prompt;
             if (prompt) {
@@ -797,6 +1162,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
 
     // New Debate button
     const newDebateBtn = document.getElementById('new-debate-btn');

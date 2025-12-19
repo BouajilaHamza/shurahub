@@ -4,12 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shurahub - Command Center</title>
+    <title>Shurahub - Ask the Council</title>
     <link rel="stylesheet" href="/static/css/globals.css">
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/citations.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/static/js/theme.js" defer></script>
@@ -17,26 +19,34 @@
 </head>
 
 <body>
-    <div class="command-center">
-        <aside class="sidebar">
+    <div class="app-container">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="/" class="logo"
-                    style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-                    <img alt="Shurahub Logo" style="height: 32px; width: auto;">
+                <a href="/" class="logo-link">
+                    <div class="logo-icon-wrapper">
+                        <span class="material-icons-outlined">check</span>
+                    </div>
+                    <span class="logo-text">Shurahub</span>
                 </a>
+                <div class="tagline-divider"></div>
+                <div class="tagline">
+                    <span>Decision</span>
+                    <span>Intelligence</span>
+                </div>
             </div>
             <nav class="sidebar-nav">
-                <button id="new-debate-btn" class="nav-item"
-                    style="cursor: pointer; background: none; border: none; text-align: left; width: 100%;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        style="min-width: 16px;">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
+                <button id="new-debate-btn" class="nav-item active">
+                    <span class="material-icons-outlined">add_circle_outline</span>
                     New Debate
                 </button>
-                <a href="/review" class="nav-item">Debate Archive</a>
+                <a href="/review" class="nav-item">
+                    <span class="material-icons-outlined">history</span>
+                    Debate Archive
+                </a>
 
                 {% if user %}
                 <div class="history-section">
@@ -50,39 +60,42 @@
             </nav>
             <div class="sidebar-footer">
                 {% if user %}
-                <a href="/logout">Logout</a>
+                <a href="/logout" class="logout-link">
+                    <span class="material-icons-outlined">logout</span>
+                    Logout
+                </a>
                 {% else %}
-                <a href="/login">Login to save history</a>
+                <a href="/login" class="login-link">
+                    <span class="material-icons-outlined">login</span>
+                    Login to save history
+                </a>
                 {% endif %}
             </div>
         </aside>
+
+        <!-- Main Content -->
         <main class="main-content">
+            <!-- Header -->
             <header class="chat-header">
                 <div class="chat-header__left">
                     <button id="mobile-menu-btn" class="icon-button" aria-label="Toggle Menu">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
+                        <span class="material-icons-outlined">menu</span>
                     </button>
-                    <div class="chat-header__titles">
-                        <div class="eyebrow">Command Center</div>
-                        <h1>Collaborative debates, refined.</h1>
-                    </div>
+                    <a href="/" class="header-logo-mobile">
+                        <div class="logo-icon-small">
+                            <span class="material-icons-outlined">check</span>
+                        </div>
+                        <span class="logo-text-small">Shurahub</span>
+                    </a>
                 </div>
                 <div class="chat-header__actions">
-                    <button id="header-new-debate-btn" class="icon-button" aria-label="New Debate" title="New Debate" style="display:none;margin-right:0.5rem;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 16px;">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                    <button id="header-new-debate-btn" class="icon-button" aria-label="New Debate" title="New Debate">
+                        <span class="material-icons-outlined">add</span>
                     </button>
                     {% if not user %}
-                    <span class="guest-pill"
-                        title="You can use Shurahub without signing in. Responses won't be saved.">Guest
-                        mode</span>
+                    <span class="guest-pill" title="You can use Shurahub without signing in. Responses won't be saved.">
+                        Guest mode
+                    </span>
                     {% endif %}
                     <button id="theme-toggle" class="icon-button" onclick="ThemeManager.toggle()"
                         aria-label="Toggle Theme">
@@ -93,49 +106,92 @@
                     </button>
                 </div>
             </header>
+
+            <!-- Chat Area -->
             <div class="chat-shell">
                 <div class="chat-status" id="chat-status">Connected</div>
                 <div class="chat-messages" id="chat-messages">
                     <!-- Empty State -->
-                    <div id="empty-state"
-                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; opacity: 0.8;">
-                        <div
-                            style="background: var(--bg-secondary); padding: 2rem; border-radius: 24px; border: 1px solid var(--border-color); max-width: 400px;">
-                            <h3 style="margin-top: 0; font-size: 1.25rem; color: var(--text-primary);">Start a new
-                                debate</h3>
-                            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Ask the council to weigh in
-                                on a complex decision.</p>
-                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                <button class="ghost-button" data-prompt="Compare Next.js vs. Astro for a content site"
-                                    style="text-align: left; border: 1px solid var(--border-color); background: var(--bg-primary);">
-                                    Compare Next.js vs. Astro
+                    <div id="empty-state" class="empty-state">
+                        <div class="empty-state-content">
+                            <div class="empty-state-header">
+                                <h2 class="empty-state-title">
+                                    Ask the <span class="gradient-text">Council</span>
+                                </h2>
+                                <p class="empty-state-subtitle">
+                                    Describe your dilemma. The AI council will debate the pros, cons, and nuances for
+                                    you.
+                                </p>
+                            </div>
+
+                            <!-- Quick Start Prompts -->
+                            <div class="quick-prompts">
+                                <button class="quick-start-prompt"
+                                    data-prompt="Should I quit my job to start a bakery, or stay for the promotion?">
+                                    <span class="prompt-icon">🎯</span>
+                                    <span class="prompt-text">Should I quit my job to start a bakery, or stay for the
+                                        promotion?</span>
                                 </button>
-                                <button class="ghost-button"
-                                    data-prompt="Should I use a relational or NoSQL database for a social app?"
-                                    style="text-align: left; border: 1px solid var(--border-color); background: var(--bg-primary);">
-                                    Relational vs. NoSQL DB
+                                <button class="quick-start-prompt"
+                                    data-prompt="Should I take the job offer or stay at my current company?">
+                                    <span class="prompt-icon">💼</span>
+                                    <span class="prompt-text">Take the job offer or stay at my current company?</span>
                                 </button>
+                                <button class="quick-start-prompt"
+                                    data-prompt="Should I invest in crypto or stick to traditional stocks?">
+                                    <span class="prompt-icon">📈</span>
+                                    <span class="prompt-text">Crypto or traditional stocks?</span>
+                                </button>
+                            </div>
+
+                            <!-- Social Proof -->
+                            <div class="powered-by">
+                                <span class="material-icons-outlined">bolt</span>
+                                <span>Powered by Multi-Agent AI</span>
                             </div>
                         </div>
                     </div>
+                    <!-- Scroll anchor for smooth auto-scrolling (ChatGPT-style) -->
+                    <div id="scroll-anchor" class="scroll-anchor"></div>
                 </div>
+
+                <!-- Input Area -->
                 <div class="chat-input-container">
-                    <div class="chat-input">
-                        <textarea id="prompt-input" rows="1" placeholder="Start a new debate..."></textarea>
-                        <button id="send-button" aria-label="Send message">
-                            <span>Send</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20"
-                                height="20">
-                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                            </svg>
-                        </button>
+                    <div class="chat-input-wrapper">
+                        <label class="input-label" for="prompt-input">What are you trying to decide?</label>
+                        <div class="chat-input">
+                            <textarea id="prompt-input" rows="1"
+                                placeholder="e.g., Should I quit my job to start a bakery, or stay for the promotion?"></textarea>
+                            <div class="char-counter">0/200</div>
+                        </div>
                     </div>
+                    <button id="send-button" class="send-button" aria-label="Start Debate">
+                        <span class="send-button-text">Start Debate</span>
+                        <span class="material-icons-outlined">arrow_forward</span>
+                    </button>
                     <div class="chat-helper">Press Enter to send • Shift + Enter for a new line</div>
                 </div>
             </div>
         </main>
+
+        <!-- Bottom Navigation (Mobile) -->
+        <nav class="bottom-nav">
+            <a href="#" class="bottom-nav-item active" id="nav-new">
+                <span class="material-icons-outlined">add_circle_outline</span>
+                <span>New</span>
+            </a>
+            <a href="/review" class="bottom-nav-item" id="nav-history">
+                <span class="material-icons-outlined">history</span>
+                <span>History</span>
+            </a>
+            <a href="{% if user %}/logout{% else %}/login{% endif %}" class="bottom-nav-item" id="nav-profile">
+                <span class="material-icons-outlined">person_outline</span>
+                <span>{% if user %}Logout{% else %}Profile{% endif %}</span>
+            </a>
+        </nav>
     </div>
 
+    <!-- Message Templates -->
     <template id="user-message-template">
         <div class="message user-message">
             <div class="message-content"></div>
@@ -145,13 +201,40 @@
     <template id="shurahub-message-template">
         <div class="message shurahub-message">
             <div class="message-content">
-                <div class="verdict-chip">Golden Answer</div>
+                <div class="verdict-chip">
+                    <span class="material-icons-outlined">check_circle</span>
+                    Golden Answer
+                </div>
                 <div class="final-answer"></div>
+
+                <!-- Bias/Weight Meter -->
+                <div class="debate-weight-meter" style="display: none;">
+                    <div class="weight-meter-header">
+                        <span class="weight-meter-label">Decision Breakdown</span>
+                    </div>
+                    <div class="weight-meter-bar">
+                        <div class="weight-opener" style="width: 50%;">
+                            <span class="weight-label">Opener</span>
+                            <span class="weight-percent">50%</span>
+                        </div>
+                        <div class="weight-critiquer" style="width: 50%;">
+                            <span class="weight-label">Critiquer</span>
+                            <span class="weight-percent">50%</span>
+                        </div>
+                    </div>
+                    <div class="weight-meter-insight">
+                        <p class="weight-insight-text"></p>
+                    </div>
+                </div>
+
                 <div class="debate-actions">
-                    <div class="debate-meta">3-model council · live transcript</div>
+                    <div class="debate-meta">
+                        <span class="material-icons-outlined">forum</span>
+                        3-model council · live transcript
+                    </div>
                     <button class="view-debate-button" aria-expanded="false">
                         <span class="label">Open debate transcript</span>
-                        <span class="chevron">▼</span>
+                        <span class="material-icons-outlined chevron">expand_more</span>
                     </button>
                 </div>
                 <div class="debate-container" hidden>
@@ -184,22 +267,63 @@
         window.USER_IS_LOGGED_IN = {{ 'true' if user else 'false' }};
     </script>
     <script>
-        // Simple script to hide empty state when message is sent
-        const originalAppend = document.getElementById('chat-messages').appendChild;
-        // We need to wait for the DOM to be fully loaded or script.js to run
-        // But since this is at the end of body, it should be fine.
-        // However, a safer way is to modify script.js. 
-        // For now, let's just add a listener to the send button to hide the empty state.
+        // Character counter
+        const promptInput = document.getElementById('prompt-input');
+        const charCounter = document.querySelector('.char-counter');
+
+        if (promptInput && charCounter) {
+            promptInput.addEventListener('input', () => {
+                const count = promptInput.value.length;
+                charCounter.textContent = `${count}/200`;
+            });
+        }
+
+        // Hide empty state when message is sent
         document.getElementById('send-button').addEventListener('click', () => {
             const emptyState = document.getElementById('empty-state');
             if (emptyState) emptyState.style.display = 'none';
         });
+
         document.getElementById('prompt-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 const emptyState = document.getElementById('empty-state');
                 if (emptyState) emptyState.style.display = 'none';
             }
         });
+
+        // Mobile sidebar toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        if (mobileMenuBtn && sidebar && sidebarOverlay) {
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            });
+        }
+
+        // Bottom nav active state
+        const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+        const navNew = document.getElementById('nav-new');
+
+        if (navNew) {
+            navNew.addEventListener('click', (e) => {
+                e.preventDefault();
+                bottomNavItems.forEach(item => item.classList.remove('active'));
+                navNew.classList.add('active');
+                // Trigger new debate
+                const newDebateBtn = document.getElementById('new-debate-btn');
+                if (newDebateBtn) newDebateBtn.click();
+            });
+        }
     </script>
 
     <!-- Register to Save Modal -->
@@ -211,10 +335,10 @@
                 and come back to it later.</p>
             <div style="margin-top: 1.5rem;">
                 <a href="/register" id="btn-register-save" class="cta-button primary"
-                    style="width: 100%; justify-content: center; text-decoration: none;">Register Now</a>
+                    style="width: 100%; justify-content: center; text-decoration: none; display: flex;">Register Now</a>
             </div>
             <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
-                Already have an account? <a href="/login" style="color: var(--primary-color);">Login</a>
+                Already have an account? <a href="/login" style="color: var(--accent-primary);">Login</a>
             </p>
         </div>
     </div>

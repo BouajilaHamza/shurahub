@@ -7,8 +7,8 @@
     <title>Shurahub - Decision Intelligence Council</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/globals.css">
     <link rel="stylesheet" href="/static/css/landing.css">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
@@ -17,103 +17,131 @@
 </head>
 
 <body>
-    <div id="background-animation"></div>
-
-    <div class="page-container">
+    <div class="page-wrapper">
+        <!-- Header -->
         <header class="main-header">
-            <div class="logo-container">
-                <a href="/" class="logo"
-                    style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-                    <img id="logo-mark" class="logo-mark" src="/static/images/logo-black.svg" alt="Shurahub Logo">
+            <div class="header-left">
+                <a href="/" class="logo-link">
+                    <div class="logo-icon">
+                        <span class="material-icons">check</span>
+                    </div>
+                    <span class="logo-text">Shurahub</span>
                 </a>
-                <div class="tagline">Decision Intelligence</div>
+                <div class="tagline-divider"></div>
+                <div class="tagline">
+                    <span>Decision</span>
+                    <span>Intelligence</span>
+                </div>
             </div>
-            <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <nav class="main-nav" id="main-nav">
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How it Works</a>
-                <a href="#feedback">Feedback</a>
-                <a href="/login" class="nav-link">Login</a>
-                <button id="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
+            <div class="header-right">
+                <button id="theme-toggle" class="icon-button" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
                     <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <!-- Icon set by JS -->
                     </svg>
                 </button>
-            </nav>
+                <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+                    <span class="material-icons">menu</span>
+                </button>
+            </div>
         </header>
 
-        <main>
+        <!-- Mobile Nav Drawer -->
+        <nav class="mobile-nav" id="mobile-nav">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it Works</a>
+            <a href="#feedback">Feedback</a>
+            <a href="/login" class="nav-link">Login</a>
+        </nav>
+
+        <!-- Hero Section -->
+        <main class="main-content">
             <section class="hero">
-                <div class="hero-content">
-                    <h1 class="hero-title">
-                        Stop Guessing.<br>
-                        Start <span class="gradient-text">Deciding.</span>
-                    </h1>
-                    <p class="hero-subtitle">
-                        The first AI council that debates <em>for</em> you.
-                        No signup required—jump straight into the room.
-                    </p>
-                    <div class="cta-container">
-                        <a href="/chat" class="cta-button primary" data-track="cta_register">Open the Council</a>
-                        <a href="#how-it-works" class="cta-button secondary" data-track="cta_how_it_works">See How It
-                            Works</a>
-                    </div>
+                <h1 class="hero-title">
+                    <span class="title-line">Stop Guessing.</span>
+                    <span class="title-line">Start <span class="gradient-text">Deciding.</span></span>
+                </h1>
+                <p class="hero-subtitle">
+                    The first AI council that debates <em>for</em> you. No signup required—jump straight into the room.
+                </p>
+                <div class="cta-container">
+                    <a href="/chat" class="cta-button primary" data-track="cta_register">
+                        Open the Council
+                    </a>
+                    <a href="#how-it-works" class="cta-button secondary" data-track="cta_how_it_works">
+                        See How It Works
+                    </a>
                 </div>
             </section>
 
-            <section id="features" class="feature-section">
-                <h2 class="section-title">Built for mobile-first clarity</h2>
+            <!-- Features Section -->
+            <section id="features" class="features-section">
+                <h2 class="section-title">Built for mobile-first<br>clarity</h2>
                 <div class="feature-grid">
                     <article class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">smartphone</span>
+                        </div>
                         <h3>Responsive command center</h3>
-                        <p>Fluid layouts, thumb-friendly tap targets, and navigation that collapses elegantly on phones.
-                        </p>
+                        <p>Fluid layouts, thumb-friendly tap targets, and navigation that collapses elegantly on phones.</p>
                     </article>
                     <article class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">insights</span>
+                        </div>
                         <h3>Decision-grade plans</h3>
-                        <p>Pick a runway that matches your cadence—from quick tests to high-volume decision councils.
-                        </p>
+                        <p>Pick a runway that matches your cadence—from quick tests to high-volume decision councils.</p>
                     </article>
                     <article class="feature-card">
+                        <div class="feature-icon">
+                            <span class="material-icons">analytics</span>
+                        </div>
                         <h3>Feedback + analytics</h3>
-                        <p>Capture user sentiment and event signals so you can see what resonates and iterate faster.
-                        </p>
+                        <p>Capture user sentiment and event signals so you can see what resonates and iterate faster.</p>
                     </article>
                 </div>
             </section>
 
+            <!-- Tech Logos -->
             <section class="tech-logos">
                 <p class="logos-title">POWERED BY ELITE MODELS</p>
                 <div class="logo-grid">
-                    <!-- Placeholders for model logos or names -->
-                    <span>GPT-4o</span>
-                    <span>Claude 3.5 Sonnet</span>
-                    <span>Llama 3</span>
-                    <span>Mistral Large</span>
+                    <span class="model-badge">GPT-4o</span>
+                    <span class="model-badge">Claude 3.5 Sonnet</span>
+                    <span class="model-badge">Llama 3</span>
+                    <span class="model-badge">Mistral Large</span>
                 </div>
             </section>
 
+            <!-- How It Works -->
             <section id="how-it-works" class="how-it-works-section">
                 <h2 class="section-title">The Boardroom Logic</h2>
                 <div class="comparison-container">
-                    <div class="comparison-column">
-                        <h3>Like Humans</h3>
+                    <div class="comparison-column opener">
+                        <div class="column-header">
+                            <div class="column-icon">
+                                <span class="material-icons">psychology</span>
+                            </div>
+                            <span class="column-label">Like Humans</span>
+                        </div>
                         <ul>
                             <li>A New Yorker and a Texan see gun laws differently.</li>
                             <li>Experience shapes opinion.</li>
                             <li>Debate reveals blind spots.</li>
                         </ul>
                     </div>
-                    <div class="comparison-column">
-                        <h3>Like AIs</h3>
+                    <div class="vs-divider">
+                        <span>VS</span>
+                    </div>
+                    <div class="comparison-column critiquer">
+                        <div class="column-header">
+                            <div class="column-icon">
+                                <span class="material-icons">smart_toy</span>
+                            </div>
+                            <span class="column-label">Like AIs</span>
+                        </div>
                         <ul>
-                            <li>GPT sees the world through the 2021 internet. Claude sees it through Anthropic’s safety
-                                lens.</li>
+                            <li>GPT sees the world through the 2021 internet. Claude sees it through Anthropic's safety lens.</li>
                             <li><strong>Training data shapes answers.</strong></li>
                             <li><strong>Debate reveals model bias.</strong></li>
                         </ul>
@@ -122,16 +150,16 @@
                 <h3 class="section-closing">Shurahub turns disagreement into wisdom.</h3>
             </section>
 
+            <!-- Feedback Section -->
             <section id="feedback" class="feedback-section">
                 <div class="feedback-copy">
                     <p class="eyebrow">User signal</p>
-                    <h2 class="section-title">Collect feedback + analytics in one view</h2>
-                    <p class="section-subtitle">Track plan interest, measure CTA performance, and capture qualitative
-                        notes without leaving the landing page.</p>
+                    <h2 class="section-title left-align">Collect feedback + analytics in one view</h2>
+                    <p class="section-subtitle">Track plan interest, measure CTA performance, and capture qualitative notes without leaving the landing page.</p>
                     <ul class="feedback-highlights">
-                        <li>Event logging for key taps (plans, CTAs, hero buttons)</li>
-                        <li>Feedback inbox saved to your database for follow-up</li>
-                        <li>Mobile-friendly form with instant status messaging</li>
+                        <li><span class="material-icons">touch_app</span> Event logging for key taps (plans, CTAs, hero buttons)</li>
+                        <li><span class="material-icons">inbox</span> Feedback inbox saved to your database for follow-up</li>
+                        <li><span class="material-icons">phone_iphone</span> Mobile-friendly form with instant status messaging</li>
                     </ul>
                 </div>
                 <form id="feedback-form" class="feedback-form">
@@ -141,8 +169,7 @@
                     </label>
                     <label class="form-field">
                         <span>Feedback</span>
-                        <textarea name="message" rows="4" required
-                            placeholder="Tell us what you need to ship."></textarea>
+                        <textarea name="message" rows="4" required placeholder="Tell us what you need to ship."></textarea>
                     </label>
                     <label class="form-field">
                         <span>Category</span>
@@ -160,11 +187,14 @@
             </section>
         </main>
 
+        <!-- Footer -->
         <footer class="main-footer">
-            <p>&copy; 2024 Shurahub. All Rights Reserved. <a href="#" id="how-it-works-modal-trigger">Curious how we
-                    pick the Golden Answer?</a></p>
+            <p>&copy; 2024 Shurahub. All Rights Reserved. <a href="#" id="how-it-works-modal-trigger">Curious how we pick the Golden Answer?</a></p>
         </footer>
     </div>
+
+    <!-- Background Effect -->
+    <div class="background-glow"></div>
 
     <!-- How It Works Modal -->
     <div id="how-it-works-modal" class="modal-container">
@@ -176,14 +206,11 @@
             </p>
             <ol>
                 <li><strong>The Opener</strong>: One AI provides the initial response.</li>
-                <li><strong>The Critiquer</strong>: A second AI, prompted to be skeptical, challenges the opener's logic
-                    and facts.</li>
-                <li><strong>The Synthesizer</strong>: A third, "judge" AI analyzes the debate and provides a final,
-                    synthesized "Golden Answer."</li>
+                <li><strong>The Critiquer</strong>: A second AI, prompted to be skeptical, challenges the opener's logic and facts.</li>
+                <li><strong>The Synthesizer</strong>: A third, "judge" AI analyzes the debate and provides a final, synthesized "Golden Answer."</li>
             </ol>
             <p>
-                Our voting and weighting algorithms then refine this process over time. It’s not just a system; it’s a
-                meritocracy of ideas.
+                Our voting and weighting algorithms then refine this process over time. It's not just a system; it's a meritocracy of ideas.
             </p>
         </div>
     </div>

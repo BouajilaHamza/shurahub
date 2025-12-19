@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shurahub - Ask the Council</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#8B5CF6", // Purple base
+                        secondary: "#EC4899", // Pink base for gradient
+                        "background-light": "#FFFFFF",
+                        "background-dark": "#111827", // Gray 900
+                        "surface-light": "#F9FAFB", // Gray 50
+                        "surface-dark": "#1F2937", // Gray 800
+                        "text-light": "#111827", // Gray 900
+                        "text-dark": "#F9FAFB", // Gray 50
+                        "text-muted-light": "#6B7280", // Gray 500
+                        "text-muted-dark": "#9CA3AF", // Gray 400
+                        "border-light": "#E5E7EB", // Gray 200
+                        "border-dark": "#374151", // Gray 700
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem", // 12px
+                        xl: "1rem", // 16px
+                        "2xl": "1.5rem", // 24px
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glow': '0 0 15px rgba(139, 92, 246, 0.3)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>.bg-gradient-primary {
+            background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+        }
+        .text-gradient-primary {
+            background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans min-h-screen flex flex-col transition-colors duration-200 antialiased selection:bg-primary selection:text-white">
+<header class="flex items-center justify-between px-6 py-5 sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-light dark:bg-surface-dark shadow-sm border border-border-light dark:border-border-dark text-primary">
+<span class="material-icons-outlined text-xl">check</span>
+</div>
+<div>
+<h1 class="text-lg font-bold tracking-tight">Shurahub</h1>
+</div>
+<div class="h-6 w-px bg-border-light dark:bg-border-dark mx-1"></div>
+<div class="flex flex-col text-[10px] leading-tight text-text-muted-light dark:text-text-muted-dark font-medium">
+<span>Decision</span>
+<span>Intelligence</span>
+</div>
+</div>
+<button class="p-2 rounded-lg hover:bg-surface-light dark:hover:bg-surface-dark text-text-light dark:text-text-dark transition-colors border border-border-light dark:border-border-dark">
+<span class="material-icons-outlined text-xl">menu</span>
+</button>
+</header>
+<main class="flex-grow flex flex-col px-6 pb-8 pt-4 max-w-md mx-auto w-full">
+<div class="mb-8">
+<h2 class="text-3xl font-extrabold tracking-tight leading-tight mb-2">
+                Ask the <span class="text-gradient-primary">Council</span>
+</h2>
+<p class="text-text-muted-light dark:text-text-muted-dark text-sm leading-relaxed">
+                Describe your dilemma. The AI council will debate the pros, cons, and nuances for you.
+            </p>
+</div>
+<form class="flex flex-col gap-6 flex-grow" onsubmit="event.preventDefault();">
+<div class="group">
+<label class="block text-sm font-semibold mb-2 text-text-light dark:text-text-dark" for="question">
+                    What are you trying to decide?
+                </label>
+<div class="relative">
+<textarea class="w-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl px-4 py-3 text-base focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none shadow-sm group-hover:border-primary/50 dark:group-hover:border-primary/50 text-text-light dark:text-text-dark placeholder-text-muted-light/50 dark:placeholder-text-muted-dark/50" id="question" placeholder="e.g., Should I quit my job to start a bakery, or stay for the promotion?" rows="4"></textarea>
+<div class="absolute bottom-3 right-3 text-xs text-text-muted-light dark:text-text-muted-dark bg-surface-light dark:bg-surface-dark px-1 rounded">
+                        0/200
+                    </div>
+</div>
+</div>
+<div class="group">
+<div class="flex items-center justify-between mb-2">
+<label class="text-sm font-semibold text-text-light dark:text-text-dark" for="stance">
+                        Your Initial Stance
+                    </label>
+<span class="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-light dark:bg-surface-dark text-text-muted-light dark:text-text-muted-dark border border-border-light dark:border-border-dark">Optional</span>
+</div>
+<div class="relative">
+<span class="absolute top-3.5 left-4 text-text-muted-light dark:text-text-muted-dark material-icons-outlined text-lg">
+                        lightbulb
+                    </span>
+<input class="w-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-text-light dark:text-text-dark placeholder-text-muted-light/50 dark:placeholder-text-muted-dark/50" id="stance" placeholder="I'm leaning towards staying because..." type="text"/>
+</div>
+<p class="mt-2 text-xs text-text-muted-light dark:text-text-muted-dark">
+                    Adding your perspective helps the council challenge your bias.
+                </p>
+</div>
+<div class="mt-2 p-4 rounded-xl border border-border-light dark:border-border-dark bg-surface-light/50 dark:bg-surface-dark/50">
+<div class="flex items-center justify-between cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-icons-outlined text-primary text-xl">tune</span>
+<span class="text-sm font-medium text-text-light dark:text-text-dark">Debate Settings</span>
+</div>
+<span class="material-icons-outlined text-text-muted-light dark:text-text-muted-dark group-hover:text-primary transition-colors">expand_more</span>
+</div>
+</div>
+<div class="flex-grow"></div> 
+<div class="mt-auto pt-4 sticky bottom-6">
+<button class="w-full bg-gradient-primary hover:opacity-90 active:scale-[0.98] transition-all text-white font-bold text-lg py-4 px-6 rounded-2xl shadow-glow flex items-center justify-center gap-2 group" type="submit">
+<span>Start Debate</span>
+<span class="material-icons-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<div class="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted-light dark:text-text-muted-dark">
+<span class="material-icons-outlined text-sm">bolt</span>
+<span>Powered by Multi-Agent AI</span>
+</div>
+</div>
+</form>
+</main>
+<nav class="border-t border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark pb-safe">
+<div class="flex justify-around items-center h-16 px-2">
+<a class="flex flex-col items-center justify-center w-full h-full text-primary" href="#">
+<span class="material-icons-outlined text-2xl">add_circle_outline</span>
+<span class="text-[10px] font-medium mt-1">New</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-text-muted-light dark:text-text-muted-dark hover:text-text-light dark:hover:text-text-dark transition-colors" href="#">
+<span class="material-icons-outlined text-2xl">history</span>
+<span class="text-[10px] font-medium mt-1">History</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-text-muted-light dark:text-text-muted-dark hover:text-text-light dark:hover:text-text-dark transition-colors" href="#">
+<span class="material-icons-outlined text-2xl">person_outline</span>
+<span class="text-[10px] font-medium mt-1">Profile</span>
+</a>
+</div>
+</nav>
+<style>
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+
+</body></html>

@@ -61,3 +61,18 @@ class DebateService:
                 session.commit()
                 session.refresh(debate)
             return debate
+
+    def delete_debate(self, debate_id: str, user_id: str):
+        """Deletes a debate for a specific user."""
+        with Session(engine) as session:
+            debate = session.exec(
+                select(Debate).where(
+                    Debate.debate_id == debate_id,
+                    Debate.user_id == user_id
+                )
+            ).first()
+            if debate:
+                session.delete(debate)
+                session.commit()
+                return True
+            return False

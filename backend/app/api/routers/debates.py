@@ -51,3 +51,21 @@ def rate_debate(data: RateDebateRequest, service: DebateService = Depends(get_de
     except Exception as e:
         print(f"Error updating rating: {e}")
         return JSONResponse(content={"status": "error", "message": "Failed to update rating"}, status_code=500)
+
+
+@router.delete("/debates/{debate_id}")
+def delete_debate(debate_id: str, request: Request, service: DebateService = Depends(get_debate_service)):
+    """Deletes a debate from the database."""
+    user = get_user_from_cookie(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    try:
+        success = service.delete_debate(debate_id, user["id"])
+        if success:
+            return JSONResponse(content={"status": "success"})
+        else:
+            raise HTTPException(status_code=404, detail="Debate not found")
+    except Exception as e:
+        print(f"Error deleting debate: {e}")
+        return JSONResponse(content={"status": "error", "message": "Failed to delete debate"}, status_code=500)

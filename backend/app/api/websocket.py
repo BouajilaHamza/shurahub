@@ -97,7 +97,32 @@ async def websocket_endpoint(
 
                 # 3. The Synthesizer (Judge)
                 synthesizer_model_req = models_to_use[2]
-                synthesis_prompt = f'''You are the final judge in a debate between two AI colleagues, {opener_model_res} and {critiquer_model_res}, who are responding to a user\'s query. Your task is to synthesize their discussion and provide the single best possible answer to the user.\n\nUser\'s Query: "{user_message}"\n\n**The Debate:**\n\n**{opener_model_res} said:** "{opener_response}"\n\n**{critiquer_model_res} critiqued and added:** "{critiquer_response}"\n\nNow, provide the definitive, final answer for the user. Be direct and concise.'''
+                synthesis_prompt = f'''You are the final judge in a debate between two AI colleagues, {opener_model_res} and {critiquer_model_res}, who are responding to a user's query. Your task is to synthesize their discussion and provide the single best possible answer to the user.
+
+User's Query: "{user_message}"
+
+**The Debate:**
+
+**{opener_model_res} said:** "{opener_response}"
+
+**{critiquer_model_res} critiqued and added:** "{critiquer_response}"
+
+IMPORTANT INSTRUCTIONS FOR YOUR RESPONSE:
+1. Provide a clear, definitive answer to the user's query
+2. Include inline citation markers to show which arguments influenced your decision:
+   - Use [O1], [O2], [O3] etc. when referencing {opener_model_res}'s arguments
+   - Use [C1], [C2], [C3] etc. when referencing {critiquer_model_res}'s arguments
+3. After your main answer, include a "Citations:" section that lists each marker with the specific quote
+
+Example format:
+"You should choose option A[O1] because of its scalability[O2], though option B has better performance[C1] in some cases."
+
+Citations:
+[O1]: "Option A is the industry standard"
+[O2]: "A scales to millions of users easily"
+[C1]: "B benchmarks 40% faster on initial load"
+
+Now provide your final answer with citations:'''
                 synthesizer_history = [{'role': 'user', 'content': synthesis_prompt}]
                 synthesizer_response, synthesizer_model_res = await stream_stage(synthesizer_model_req, synthesizer_history, "synthesizer")
 

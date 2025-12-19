@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="/static/css/review.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="/static/js/theme.js" defer></script>
     {% include 'analytics.html' %}
@@ -17,36 +18,48 @@
 
 <body>
     <header class="main-header">
-        <div class="logo-container">
-            <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-                <img alt="Shurahub Logo" style="height: 40px; width: auto;">
+        <div class="header-left">
+            <a href="/" class="logo-link">
+                <div class="logo-icon">
+                    <span class="material-icons-outlined">check</span>
+                </div>
+                <span class="logo-text">Shurahub</span>
             </a>
-            <div class="tagline">Decision Intelligence</div>
+            <div class="tagline-divider"></div>
+            <div class="tagline">
+                <span>Decision</span>
+                <span>Intelligence</span>
+            </div>
         </div>
-        <nav class="main-nav">
-            <a href="/#how-it-works">How it Works</a>
-            <a href="/review">Debate Archive</a>
-            {% if user %}
-            <a href="/chat" class="nav-button cta-button">Dashboard</a>
-            <a href="/logout" class="nav-button">Logout</a>
-            {% else %}
-            <a href="/login" class="nav-button login-button">Login</a>
-            <a href="/register" class="nav-button register-button">Register</a>
-            {% endif %}
-            <button id="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle Theme"
-                style="background: none; border: none; cursor: pointer; color: var(--text-secondary); margin-left: 1rem;">
+        <div class="header-right">
+            <nav class="main-nav">
+                <a href="/#how-it-works">How it Works</a>
+                <a href="/review" class="active">Archive</a>
+                {% if user %}
+                <a href="/chat" class="nav-button primary">Dashboard</a>
+                {% else %}
+                <a href="/login" class="nav-button">Login</a>
+                <a href="/register" class="nav-button primary">Register</a>
+                {% endif %}
+            </nav>
+            <button id="theme-toggle" class="icon-button" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
                 <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                    stroke-linecap="round" stroke-linejoin="round">
                     <!-- Icon set by JS -->
                 </svg>
             </button>
-        </nav>
+        </div>
     </header>
+
     <div class="review-container">
         <header class="review-header">
-            <h1>Debate Archive</h1>
+            <h1>Debate <span class="gradient-text">Archive</span></h1>
+            <p class="review-subtitle">Browse and search through past council debates</p>
             <div class="controls-container">
-                <input type="search" id="search-input" placeholder="Search debates...">
+                <div class="search-wrapper">
+                    <span class="material-icons-outlined">search</span>
+                    <input type="search" id="search-input" placeholder="Search debates...">
+                </div>
                 <select id="sort-select">
                     <option value="newest">Sort by Newest</option>
                     <option value="oldest">Sort by Oldest</option>
@@ -56,6 +69,7 @@
         </header>
         <main id="debates-list" class="debates-list"></main>
     </div>
+
     <script src="/static/js/review.js"></script>
 </body>
 
