@@ -1,0 +1,167 @@
+/* Citation Tooltips (RAG-style) */
+.citation {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    border-radius: 4px;
+    margin: 0 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    vertical-align: super;
+    line-height: 1;
+    user-select: none;
+}
+
+.citation:hover {
+    background: rgba(124, 58, 237, 0.2);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+.citation:active {
+    transform: translateY(0);
+}
+
+/* Citation color coding */
+.citation.from-opener {
+    color: rgb(37, 99, 235);
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.citation.from-opener:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgb(37, 99, 235);
+}
+
+.citation.from-critiquer {
+    color: rgb(220, 38, 38);
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.citation.from-critiquer:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgb(220, 38, 38);
+}
+
+/* Citation Tooltip */
+.citation-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    min-width: 250px;
+    max-width: 350px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.citation-tooltip.active {
+    display: block;
+    opacity: 1;
+    animation: tooltipFadeIn 0.2s ease;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.citation-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--bg-primary);
+}
+
+.citation-tooltip-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.citation-tooltip-header .badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+}
+
+.citation-tooltip-header .badge.opener {
+    background: rgba(59, 130, 246, 0.15);
+    color: rgb(37, 99, 235);
+}
+
+.citation-tooltip-header .badge.critiquer {
+    background: rgba(239, 68, 68, 0.15);
+    color: rgb(220, 38, 38);
+}
+
+.citation-tooltip-content {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+/* Mobile adjustments for tooltips */
+@media (max-width: 768px) {
+    .citation-tooltip {
+        position: fixed;
+        bottom: auto;
+        top: 50%;
+        left: 1rem;
+        right: 1rem;
+        transform: translateY(-50%);
+        max-width: calc(100vw - 2rem);
+        min-width: auto;
+    }
+
+    .citation-tooltip::after {
+        display: none;
+    }
+
+    .citation {
+        width: 20px;
+        height: 20px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Touch-friendly citation on mobile */
+@media (hover: none) {
+    .citation:active {
+        background: rgba(124, 58, 237, 0.25);
+        transform: scale(1.1);
+    }
+}

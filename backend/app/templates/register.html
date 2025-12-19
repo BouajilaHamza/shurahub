@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/globals.css">
     <link rel="stylesheet" href="/static/css/auth.css">
-    <link rel="stylesheet" href="/static/css/landing.css"> <!-- Reuse toggle styles -->
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="/static/js/theme.js" defer></script>
     <script src="/static/js/auth.js" defer></script>
@@ -19,7 +19,7 @@
 
 <body>
     <div id="theme-toggle-wrapper">
-        <button id="theme-toggle" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
+        <button id="theme-toggle" class="icon-btn" onclick="ThemeManager.toggle()" aria-label="Toggle Theme">
             <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <!-- Icon set by JS -->
@@ -27,29 +27,42 @@
         </button>
     </div>
 
-    <header class="auth-nav" style="position: fixed; top: 20px; left: 20px; z-index: 100;">
-        <a href="/"
-            style="text-decoration: none; color: var(--text-secondary); font-weight: 500; transition: color 0.2s;">
-            ← Back to Home
+    <header class="auth-nav">
+        <a href="/" class="back-link">
+            <span class="material-icons-outlined">arrow_back</span>
+            Back to Home
         </a>
     </header>
 
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <a href="/" class="logo" style="text-decoration: none; color: inherit; display: inline-block;">
-                    <img alt="Shurahub Logo" style="height: 56px; width: auto; margin-bottom: 10px;">
+                <a href="/" class="logo-link">
+                    <div class="logo-icon">
+                        <span class="material-icons-outlined">check</span>
+                    </div>
+                    <span class="logo-text">Shurahub</span>
                 </a>
-                <div class="auth-pill">Create your seat</div>
-                <h2>Stop Guessing. Start Deciding.</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 0;">Join thousands making smarter decisions with
-                    AI-powered debate. No email confirmation required.</p>
+                <div class="auth-pill">
+                    <span class="material-icons-outlined">person_add</span>
+                    Create your seat
+                </div>
+                <h2>Stop Guessing. Start <span class="gradient-text">Deciding.</span></h2>
+                <p>Join thousands making smarter decisions with AI-powered debate. No email confirmation required.</p>
             </div>
+
+            {% if error %}
+            <div class="message error">
+                <span class="material-icons-outlined">error</span>
+                {{ error }}
+            </div>
+            {% endif %}
 
             <form action="/register" method="post">
                 <div class="input-group">
                     <label for="email">Email Address</label>
                     <div class="input-wrapper">
+                        <span class="input-icon material-icons-outlined">email</span>
                         <input type="email" id="email" name="email" placeholder="name@example.com" required
                             autocomplete="email">
                     </div>
@@ -58,25 +71,21 @@
                 <div class="input-group">
                     <label for="password">Password</label>
                     <div class="input-wrapper">
+                        <span class="input-icon material-icons-outlined">lock</span>
                         <input type="password" id="password" name="password" placeholder="Create a strong password"
                             required autocomplete="new-password">
                         <button type="button" class="password-toggle" onclick="togglePassword('password', this)"
                             aria-label="Toggle Password Visibility">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
+                            <span class="material-icons-outlined">visibility</span>
                         </button>
                     </div>
                 </div>
 
-                <button type="submit" class="auth-button">Create Account</button>
+                <button type="submit" class="auth-button">
+                    <span>Create Account</span>
+                    <span class="material-icons-outlined">arrow_forward</span>
+                </button>
             </form>
-
-            {% if error %}
-            <div class="message error">{{ error }}</div>
-            {% endif %}
 
             <div class="auth-footer">
                 <p>Already have an account? <a href="/login">Sign in</a></p>
@@ -85,13 +94,9 @@
         </div>
     </div>
 
-    <footer
-        style="position: fixed; bottom: 20px; width: 100%; text-align: center; color: var(--text-secondary); font-size: 0.875rem;">
+    <footer class="auth-page-footer">
         <p>&copy; 2024 Shurahub. All Rights Reserved.</p>
     </footer>
-
-    <script src="/static/js/theme.js"></script>
-    <script src="/static/js/auth.js"></script>
 </body>
 
 </html>
