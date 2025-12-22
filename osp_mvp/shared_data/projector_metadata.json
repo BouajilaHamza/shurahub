@@ -1,9 +1,0 @@
-{
-  "source_model": "all-MiniLM-L6-v2",
-  "target_model": "paraphrase-albert-small-v2",
-  "source_dimension": 384,
-  "target_dimension": 768,
-  "training_samples": 20,
-  "average_alignment_score": 1.0,
-  "matrix_file": "projector_matrix.npy"
-}
