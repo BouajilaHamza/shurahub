@@ -1,0 +1,14 @@
+{
+  "description": "Semantic DNS Registry - Maps domains to their vector embeddings",
+  "protocol_version": "OSP/1.0",
+  "entries": {
+    "example.com": {
+      "vectors_path": "host_vectors.json",
+      "model_name": "all-MiniLM-L6-v2",
+      "embedding_dimension": 384,
+      "projector_available": true,
+      "projector_path": "projector_matrix.npy",
+      "last_updated": "2024-01-15T10:00:00Z"
+    }
+  }
+}
