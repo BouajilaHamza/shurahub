@@ -15,7 +15,7 @@ body {
 }
 
 .page-wrapper {
-    max-width: 480px;
+    max-width: 100%;
     margin: 0 auto;
     min-height: 100dvh;
     display: flex;
@@ -193,6 +193,9 @@ body {
 .main-content {
     flex: 1;
     padding: 0 1.5rem;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 /* ============================================
@@ -617,7 +620,7 @@ body {
     gap: 0.5rem;
 }
 
-.form-field > span {
+.form-field>span {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -722,6 +725,7 @@ body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -780,7 +784,7 @@ body {
    Tablet & Desktop Styles
    ============================================ */
 @media (min-width: 640px) {
-    .page-wrapper {
+    .main-content {
         max-width: 720px;
     }
 
@@ -862,7 +866,7 @@ body {
 }
 
 @media (min-width: 960px) {
-    .page-wrapper {
+    .main-content {
         max-width: 1000px;
     }
 
