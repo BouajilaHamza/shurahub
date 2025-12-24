@@ -5,6 +5,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.core.config import supabase_client, AVAILABLE_MODELS
 from app.services.ai_service import AIService
 from app.services.debate_service import DebateService
+from app.models import ARGUMENT_FORMAT_INSTRUCTIONS, SYNTHESIS_FORMAT_INSTRUCTIONS
 
 router = APIRouter()
 
@@ -86,43 +87,52 @@ async def websocket_endpoint(
                 
                 # 1. The Opener
                 opener_model_req = models_to_use[0]
-                opener_history = [{'role': 'user', 'content': user_message}]
+                opener_system_prompt = f'''You are a debater in the Shurahub AI Council. Your role is to provide the OPENING argument.
+
+RULES:
+- Be CONCISE. No long paragraphs.
+- Users want to SKIM, not read essays.
+- Each field has a character limit - respect it.
+
+{ARGUMENT_FORMAT_INSTRUCTIONS}'''
+                opener_history = [
+                    {'role': 'system', 'content': opener_system_prompt},
+                    {'role': 'user', 'content': user_message}
+                ]
                 opener_response, opener_model_res = await stream_stage(opener_model_req, opener_history, "opener")
 
                 # 2. The Critiquer
                 critiquer_model_req = models_to_use[1]
-                critique_prompt = f'''Your colleague, {opener_model_res}, has responded to the user. Your task is to critique their response and offer a better, more refined alternative. Directly address their points.\n\nUser\'s query: "{user_message}"\n\n{opener_model_res}\'s response: "{opener_response}"'''
+                critique_prompt = f'''You are critiquing your colleague {opener_model_res}'s argument.
+
+RULES:
+- Be CONCISE. No long paragraphs.
+- Users want to SKIM, not read essays.
+- Each field has a character limit - respect it.
+
+User's query: "{user_message}"
+{opener_model_res}'s response: "{opener_response}"
+
+{ARGUMENT_FORMAT_INSTRUCTIONS}'''
                 critiquer_history = [{'role': 'user', 'content': critique_prompt}]
                 critiquer_response, critiquer_model_res = await stream_stage(critiquer_model_req, critiquer_history, "critiquer")
 
                 # 3. The Synthesizer (Judge)
                 synthesizer_model_req = models_to_use[2]
-                synthesis_prompt = f'''You are the final judge in a debate between two AI colleagues, {opener_model_res} and {critiquer_model_res}, who are responding to a user's query. Your task is to synthesize their discussion and provide the single best possible answer to the user.
+                synthesis_prompt = f'''You are the JUDGE providing the Golden Answer.
 
 User's Query: "{user_message}"
 
-**The Debate:**
+The Debate:
+{opener_model_res}: "{opener_response}"
+{critiquer_model_res}: "{critiquer_response}"
 
-**{opener_model_res} said:** "{opener_response}"
+RULES:
+- Be CONCISE. No essays.
+- Keep each section SHORT.
+- Users want a clear answer, not paragraphs.
 
-**{critiquer_model_res} critiqued and added:** "{critiquer_response}"
-
-IMPORTANT INSTRUCTIONS FOR YOUR RESPONSE:
-1. Provide a clear, definitive answer to the user's query
-2. Include inline citation markers to show which arguments influenced your decision:
-   - Use [O1], [O2], [O3] etc. when referencing {opener_model_res}'s arguments
-   - Use [C1], [C2], [C3] etc. when referencing {critiquer_model_res}'s arguments
-3. After your main answer, include a "Citations:" section that lists each marker with the specific quote
-
-Example format:
-"You should choose option A[O1] because of its scalability[O2], though option B has better performance[C1] in some cases."
-
-Citations:
-[O1]: "Option A is the industry standard"
-[O2]: "A scales to millions of users easily"
-[C1]: "B benchmarks 40% faster on initial load"
-
-Now provide your final answer with citations:'''
+{SYNTHESIS_FORMAT_INSTRUCTIONS}'''
                 synthesizer_history = [{'role': 'user', 'content': synthesis_prompt}]
                 synthesizer_response, synthesizer_model_res = await stream_stage(synthesizer_model_req, synthesizer_history, "synthesizer")
 

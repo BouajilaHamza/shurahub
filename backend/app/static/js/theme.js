@@ -17,8 +17,10 @@ const ThemeManager = {
     applyTheme(theme) {
         if (theme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.classList.add('dark');
         } else {
             document.documentElement.removeAttribute('data-theme');
+            document.documentElement.classList.remove('dark');
         }
         localStorage.setItem('theme', theme);
         this.updateIcon(theme);

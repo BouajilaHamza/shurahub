@@ -608,7 +608,9 @@ body.sidebar-open .main-content {
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
-#prompt-input {
+#prompt-input,
+#chat-prompt-input,
+#empty-prompt-input {
     width: 100%;
     background: transparent;
     border: none;
@@ -624,11 +626,15 @@ body.sidebar-open .main-content {
     box-sizing: border-box;
 }
 
-#prompt-input:focus {
+#prompt-input:focus,
+#chat-prompt-input:focus,
+#empty-prompt-input:focus {
     outline: none;
 }
 
-#prompt-input::placeholder {
+#prompt-input::placeholder,
+#chat-prompt-input::placeholder,
+#empty-prompt-input::placeholder {
     color: var(--text-secondary);
     opacity: 0.5;
 }

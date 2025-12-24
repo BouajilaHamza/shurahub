@@ -1,7 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
-    const promptInput = document.getElementById('prompt-input');
-    const sendButton = document.getElementById('send-button');
+    const emptyPromptInput = document.getElementById('empty-prompt-input');
+    const chatPromptInput = document.getElementById('chat-prompt-input');
+    const promptInput = chatPromptInput || document.getElementById('prompt-input'); // Fallback
+    const emptySendButton = document.getElementById('empty-send-button');
+    const chatSendButton = document.getElementById('chat-send-button');
+    const sendButton = chatSendButton || document.getElementById('send-button'); // Fallback
     const exampleButton = document.getElementById('example-button');
     const statusBar = document.getElementById('chat-status');
     const chatInputShell = document.querySelector('.chat-input');
@@ -124,73 +128,157 @@ document.addEventListener('DOMContentLoaded', () => {
         return entry;
     }
 
-    // Debounce timer and pending updates for smooth streaming
-    let streamUpdateTimer = null;
-    let pendingStreamUpdates = {};
-    const STREAM_RENDER_DELAY = 100; // ms between renders for smoothness (ChatGPT uses ~100ms)
+    // Streaming variables (content is buffered, not rendered live)
 
-    function handleStreamChunk(data) {
-        if (!currentShurahubMessage) return;
-        const role = data.role || data.sender || 'stream';
-        streamBuffers[role] = (streamBuffers[role] || '') + data.text;
-
-        // Mark this role as needing an update
-        pendingStreamUpdates[role] = {
-            sender: data.sender,
-            content: streamBuffers[role]
+    function parseArgument(text) {
+        const lines = text.split('\n');
+        const argument = {
+            claim: '',
+            explanation: '',
+            evidence: '',
+            counterargument: '',
+            stance: 'Neutral',
+            rawText: text
         };
 
-        // Debounce the actual DOM update for smoother rendering
-        if (!streamUpdateTimer) {
-            streamUpdateTimer = setTimeout(() => {
-                requestAnimationFrame(() => {
-                    flushStreamUpdates();
-                    streamUpdateTimer = null;
-                });
-            }, STREAM_RENDER_DELAY);
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed.toLowerCase().startsWith('claim:')) argument.claim = trimmed.replace(/claim:/i, '').trim();
+            else if (trimmed.toLowerCase().startsWith('explanation:')) argument.explanation = trimmed.replace(/explanation:/i, '').trim();
+            else if (trimmed.toLowerCase().startsWith('evidence:')) argument.evidence = trimmed.replace(/evidence:/i, '').trim();
+            else if (trimmed.toLowerCase().startsWith('counterargument:')) argument.counterargument = trimmed.replace(/counterargument:/i, '').trim();
+            else if (trimmed.toLowerCase().startsWith('stance:')) argument.stance = trimmed.replace(/stance:/i, '').trim();
+        });
+
+        // If no structured claim found, use first non-empty line or raw text preview
+        if (!argument.claim && text.trim()) {
+            const firstLine = text.split('\n').find(l => l.trim());
+            argument.claim = firstLine ? firstLine.substring(0, 100) + (firstLine.length > 100 ? '...' : '') : 'Drafting...';
         }
+
+        return argument;
     }
 
-    function flushStreamUpdates() {
-        if (!currentShurahubMessage) return;
+    function parseSynthesis(text) {
+        const sections = {
+            summary: [],
+            consensus: '',
+            breakdown: '',
+            citations: '',
+            rawText: text
+        };
 
-        Object.entries(pendingStreamUpdates).forEach(([role, update]) => {
-            const entry = getOrCreateDebateEntry(role, update.sender);
-            if (!entry) return;
+        const lines = text.split('\n');
+        let currentSection = '';
 
-            const textTarget = entry.querySelector('.stream-text');
-            if (textTarget) {
-                // Add streaming class for cursor animation
-                textTarget.classList.add('streaming');
-
-                // Use a more efficient way to update - only if content changed
-                const newHtml = marked.parse(update.content);
-                if (textTarget.innerHTML !== newHtml) {
-                    textTarget.innerHTML = newHtml;
-                }
+        lines.forEach(line => {
+            const lowerLine = line.toLowerCase().trim();
+            if (lowerLine.startsWith('summary:')) { currentSection = 'summary'; }
+            else if (lowerLine.startsWith('consensus:')) {
+                sections.consensus = line.replace(/consensus:/i, '').trim();
+                currentSection = 'consensus';
             }
-
-            // Update final answer for synthesizer
-            if (role === 'synthesizer') {
-                const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
-                if (finalAnswer) {
-                    // Add streaming class for cursor animation
-                    finalAnswer.classList.add('streaming');
-
-                    const newHtml = marked.parse(update.content);
-                    if (finalAnswer.innerHTML !== newHtml) {
-                        finalAnswer.innerHTML = newHtml;
-                    }
+            else if (lowerLine.startsWith('breakdown:') || lowerLine.startsWith('decision breakdown:')) {
+                sections.breakdown = line.replace(/(?:decision )?breakdown:/i, '').trim();
+                currentSection = 'breakdown';
+            }
+            else if (lowerLine.startsWith('citations:')) { currentSection = 'citations'; }
+            else {
+                const trimmed = line.trim();
+                if (currentSection === 'summary' && trimmed.startsWith('-')) {
+                    sections.summary.push(trimmed.substring(1).trim());
+                } else if (currentSection === 'breakdown' && trimmed) {
+                    sections.breakdown += (sections.breakdown ? ' ' : '') + trimmed;
+                } else if (currentSection === 'citations' && trimmed) {
+                    sections.citations += line + '\n';
+                } else if (currentSection === 'consensus' && trimmed && !sections.consensus) {
+                    sections.consensus = trimmed;
                 }
             }
         });
 
-        // Clear pending updates
-        pendingStreamUpdates = {};
+        // Fallback: if no consensus found, use the first substantial line
+        if (!sections.consensus && text.trim().length > 20) {
+            const firstGoodLine = lines.find(l => l.trim().length > 30 && !l.trim().startsWith('-'));
+            if (firstGoodLine) sections.consensus = firstGoodLine.trim();
+        }
 
-        // Scroll after content update - use requestAnimationFrame for smooth timing
-        requestAnimationFrame(scrollToBottom);
+        return sections;
     }
+
+    function getOrCreateArgumentNode(role, sender) {
+        if (!currentShurahubMessage) return null;
+        const nodesContainer = currentShurahubMessage.querySelector('.debate-nodes-container');
+        if (!nodesContainer) return null;
+
+        let node = nodesContainer.querySelector(`.debate-node[data-role="${role}"]`);
+        if (!node) {
+            const slot = nodesContainer.querySelector(`.node-slot[data-role="${role}"]`);
+            if (!slot) return null;
+
+            const template = document.getElementById('argument-card-template');
+            if (!template) return null;
+            const clone = template.content.cloneNode(true);
+            node = clone.querySelector('.debate-node');
+            node.dataset.role = role;
+
+            // Set model name
+            const modelName = node.querySelector('.model-name');
+            if (modelName) modelName.textContent = sender || 'Model';
+
+            // Indentation for critiquer
+            if (role === 'critiquer') {
+                const elbow = node.querySelector('.connector-elbow');
+                if (elbow) elbow.classList.remove('hidden');
+            }
+
+            slot.appendChild(clone);
+            node = slot.querySelector(`.debate-node[data-role="${role}"]`);
+
+            // Wire up expand button
+            const expandBtn = node.querySelector('.expand-argument-btn');
+            const details = node.querySelector('.extended-details');
+            if (expandBtn && details) {
+                expandBtn.addEventListener('click', () => {
+                    const isHidden = details.classList.contains('hidden');
+                    details.classList.toggle('hidden', !isHidden);
+                    expandBtn.querySelector('.btn-label').textContent = isHidden ? 'Collapse' : 'Expand';
+                    expandBtn.querySelector('.material-symbols-outlined').textContent = isHidden ? 'expand_less' : 'expand_more';
+
+                    if (isHidden && typeof gtag === 'function') {
+                        gtag('event', 'debate_tree_expand', {
+                            'event_category': 'interaction',
+                            'role': role
+                        });
+                    }
+                });
+            }
+        }
+        return node;
+    }
+
+    function handleStreamChunk(data) {
+        if (!currentShurahubMessage) return;
+        const role = data.role || data.sender || 'stream';
+
+        // Just buffer the content - don't render during streaming
+        streamBuffers[role] = (streamBuffers[role] || '') + data.text;
+
+        // Show a simple "thinking" indicator for this role if not already visible
+        const node = getOrCreateArgumentNode(role, data.sender);
+        if (node) {
+            const claimEl = node.querySelector('.claim-text');
+            const explEl = node.querySelector('.explanation-text');
+            if (claimEl && !claimEl.dataset.loaded) {
+                claimEl.innerHTML = '<span class="animate-pulse">Thinking...</span>';
+            }
+            if (explEl && !explEl.dataset.loaded) {
+                explEl.innerHTML = '<span class="text-slate-400 dark:text-slate-500 animate-pulse">Analyzing your question...</span>';
+            }
+        }
+    }
+
+    // flushStreamUpdates removed - we now render complete content only
 
     // Helper function to remove streaming indicators when done
     function removeStreamingIndicators() {
@@ -218,11 +306,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const messageElement = shurahubMessageTemplate.content.cloneNode(true);
             chatMessages.appendChild(messageElement);
             currentShurahubMessage = chatMessages.lastElementChild;
+
+            // Set the question title
+            const titleEl = currentShurahubMessage.querySelector('.debate-title-text');
+            if (titleEl) titleEl.textContent = lastPrompt;
+
             streamBuffers = {};
             setWorkingState(true);
-            setStreamingState(true);  // Enable streaming mode for instant scroll
+            setStreamingState(true);
             setStatus(data.mode === 'guest' ? 'Guest session: warming up the council...' : 'Council warming up...', true);
-            scrollToBottom();  // Scroll to bottom for initial position
+            scrollToBottom();
             return;
         }
 
@@ -232,41 +325,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (currentShurahubMessage) {
-            const debateContent = currentShurahubMessage.querySelector('.debate-content');
-            const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
+            // Handle complete message from opener/critiquer (non-streaming final message)
+            if (data.role === 'opener' || data.role === 'critiquer') {
+                renderCompleteArgument(data.role, data.sender, data.text);
+            }
 
-            if (data.text.startsWith('**Final Verdict:**')) {
-                const answer = data.text.replace('**Final Verdict:**', '').trim();
-                finalAnswer.innerHTML = marked.parse(answer || streamBuffers['synthesizer'] || '');
-                const viewDebateButton = currentShurahubMessage.querySelector('.view-debate-button');
-                const debateContainer = currentShurahubMessage.querySelector('.debate-container');
+            // Check for debate completion (synthesizer)
+            if (data.text.startsWith('**Final Verdict:**') || (data.role === 'synthesizer' && data.text)) {
+                // Render synthesis
+                renderCompleteSynthesis(data.sender, data.text);
 
-                if (viewDebateButton && debateContainer) {
-                    viewDebateButton.style.display = 'inline-flex';
-                    viewDebateButton.setAttribute('aria-expanded', 'false');
-                    const label = viewDebateButton.querySelector('.label');
-                    const chevron = viewDebateButton.querySelector('.chevron');
-                    if (label) label.textContent = 'Open debate transcript';
-                    if (chevron) chevron.style.transform = 'rotate(0deg)';
-                    debateContainer.hidden = true;
+                // Show the feedback trigger button
+                const feedbackTrigger = currentShurahubMessage.querySelector('.feedback-trigger');
+                if (feedbackTrigger) {
+                    feedbackTrigger.hidden = false;
                 }
-                const feedbackBlock = currentShurahubMessage.querySelector('.response-feedback');
-                if (feedbackBlock) {
-                    feedbackBlock.hidden = false;
-                    wireResponseFeedback(feedbackBlock, answer, lastPrompt);
+
+                // Show follow-up suggestions
+                const followUpSection = currentShurahubMessage.querySelector('.follow-up-suggestions');
+                if (followUpSection) {
+                    followUpSection.hidden = false;
                 }
+
+                // Store context for feedback modal
+                window.currentFeedbackContext = {
+                    verdict: data.text,
+                    prompt: lastPrompt
+                };
+
+                // Show feedback modal after user has time to read the result
+                setTimeout(() => {
+                    if (typeof showFeedbackModal === 'function') {
+                        showFeedbackModal();
+                    }
+                }, 30000); // 30 seconds - gives ample time to read
+
                 setWorkingState(false);
                 setStatus('Ready for the next decision.');
-
-                // Remove streaming cursor indicators and disable streaming mode
                 removeStreamingIndicators();
-                setStreamingState(false);  // Disable streaming mode, smooth scroll resumes
-
-                setWorkingState(false);
-
+                setStreamingState(false);
                 updateChatHeight();
-                // 1. initial_analysis_gen
-                // Fired when a user successfully completes the Quick-Start flow and generates their very first Decision Analysis.
+
+                // Scroll to show the complete result
+                scrollToBottom();
+
+                // Track Golden Answer View
+                if (typeof gtag === 'function') {
+                    gtag('event', 'golden_answer_view', {
+                        'event_category': 'engagement',
+                        'prompt_title': lastPrompt
+                    });
+                }
+
+                // First analysis tracking
                 const hasGenerated = localStorage.getItem('shurahub_first_analysis_generated');
                 if (!hasGenerated) {
                     if (typeof gtag === 'function') {
@@ -277,77 +388,128 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     localStorage.setItem('shurahub_first_analysis_generated', 'true');
                 }
-
-                // Track mobile debate completion
-                if (isMobile && typeof gtag === 'function') {
-                    gtag('event', 'mobile_debate_complete', {
-                        'event_category': 'mobile',
-                        'event_label': 'debate_finished',
-                        'user_logged_in': window.USER_IS_LOGGED_IN || false
-                    });
-                }
-
-                // Calculate and display debate weight meter
-                updateDebateWeightMeter();
-
-                // 2. project_saved (for logged-in users) & 3. register_to_save (setup for guests)
-                if (window.USER_IS_LOGGED_IN) {
-                    // For logged-in users, the project is auto-saved by the backend.
-                    if (typeof gtag === 'function') {
-                        gtag('event', 'project_saved', {
-                            'event_category': 'engagement',
-                            'event_label': 'auto_save_logged_in'
-                        });
-                    }
-                } else {
-                    // For guests, show "Save Analysis" button to trigger registration
-                    const debateActions = currentShurahubMessage.querySelector('.debate-actions');
-                    if (debateActions && !debateActions.querySelector('.save-analysis-btn')) {
-                        const saveBtn = document.createElement('button');
-                        saveBtn.className = 'view-debate-button save-analysis-btn';
-                        saveBtn.innerHTML = '<span class="label">Save Analysis</span>';
-                        saveBtn.style.marginLeft = '0.5rem';
-                        saveBtn.style.display = 'inline-flex'; // Ensure it's visible
-
-                        saveBtn.addEventListener('click', () => {
-                            const modal = document.getElementById('register-save-modal');
-                            if (modal) {
-                                modal.classList.add('active');
-                                // We don't track here, we track on the "Register Now" click in the modal
-                            }
-                        });
-
-                        debateActions.appendChild(saveBtn);
-                    }
-                }
-            } else {
-                const role = data.role || 'update';
-                const entry = getOrCreateDebateEntry(role, data.sender);
-                if (entry) {
-                    const textTarget = entry.querySelector('.stream-text');
-                    if (textTarget) {
-                        textTarget.innerHTML = marked.parse(data.text);
-                    }
-                } else if (debateContent) {
-                    const debateEntry = document.createElement('div');
-                    debateEntry.classList.add('debate-entry');
-                    const sender = `<b>${data.sender}:</b>`;
-                    const response = marked.parse(data.text);
-                    debateEntry.innerHTML = `${sender}<br>${response}`;
-                    debateContent.appendChild(debateEntry);
-                }
             }
         }
-        scrollToBottom();
+    }
+
+    // Render a complete argument card (after streaming is done)
+    function renderCompleteArgument(role, sender, content) {
+        if (!currentShurahubMessage) return;
+
+        const node = getOrCreateArgumentNode(role, sender);
+        if (!node) return;
+
+        const arg = parseArgument(content);
+
+        const claimEl = node.querySelector('.claim-text');
+        const explEl = node.querySelector('.explanation-text');
+        const evidenceEl = node.querySelector('.evidence-text');
+        const counterEl = node.querySelector('.counter-text');
+        const stanceEl = node.querySelector('.stance-label');
+        const indicatorEl = node.querySelector('.stance-indicator');
+        const dotEl = node.querySelector('.connector-dot');
+
+        // Mark as loaded
+        if (claimEl) {
+            claimEl.textContent = arg.claim || 'Analysis complete';
+            claimEl.dataset.loaded = 'true';
+        }
+        if (explEl) {
+            explEl.innerHTML = marked.parse(arg.explanation || content.substring(0, 500));
+            explEl.dataset.loaded = 'true';
+        }
+        if (evidenceEl) evidenceEl.textContent = arg.evidence;
+        if (counterEl) {
+            counterEl.textContent = arg.counterargument;
+            const counterSection = node.querySelector('.counter-section');
+            if (counterSection) counterSection.classList.toggle('hidden', !arg.counterargument);
+        }
+
+        if (stanceEl) {
+            stanceEl.textContent = `Stance: ${arg.stance}`;
+            let color = 'bg-primary';
+            let textColor = 'text-primary';
+            if (arg.stance.toLowerCase().includes('con') || arg.stance.toLowerCase().includes('against')) {
+                color = 'bg-status-con'; textColor = 'text-status-con';
+            } else if (arg.stance.toLowerCase().includes('pro') || arg.stance.toLowerCase().includes('for')) {
+                color = 'bg-primary'; textColor = 'text-primary';
+            } else if (arg.stance.toLowerCase().includes('neutral')) {
+                color = 'bg-status-neutral'; textColor = 'text-status-neutral';
+            }
+
+            if (indicatorEl) indicatorEl.className = `stance-indicator absolute left-0 top-0 bottom-0 w-1 ${color}`;
+            if (dotEl) dotEl.className = `connector-dot absolute left-[11px] top-6 w-[18px] h-[18px] rounded-full border-[3px] border-white dark:border-background-dark shadow-sm z-10 ${color}`;
+            stanceEl.className = `stance-label text-[10px] font-bold uppercase tracking-wider ${textColor}`;
+        }
+    }
+
+    // Render complete synthesis
+    function renderCompleteSynthesis(sender, content) {
+        if (!currentShurahubMessage) return;
+
+        const sections = parseSynthesis(content);
+        const summaryBullets = currentShurahubMessage.querySelector('.summary-bullets');
+        const confidencePill = currentShurahubMessage.querySelector('.confidence-pill');
+
+        // Update Golden Answer Summary
+        if (summaryBullets && sections.summary.length > 0) {
+            summaryBullets.innerHTML = sections.summary.map(bullet => `
+                <div class="flex gap-2 items-start">
+                    <span class="material-symbols-outlined text-primary text-base mt-0.5 shrink-0">arrow_right_alt</span>
+                    <p class="text-sm leading-snug text-slate-600 dark:text-slate-300 font-medium">${bullet}</p>
+                </div>
+            `).join('');
+        }
+
+        if (confidencePill) {
+            confidencePill.textContent = 'HIGH CONFIDENCE';
+            confidencePill.classList.remove('animate-pulse');
+        }
+
+        // Render Synthesis node
+        const synthNode = getOrCreateArgumentNode('synthesizer', sender);
+        if (synthNode) {
+            const claimEl = synthNode.querySelector('.claim-text');
+            const explEl = synthNode.querySelector('.explanation-text');
+            const stanceEl = synthNode.querySelector('.stance-label');
+            const indicatorEl = synthNode.querySelector('.stance-indicator');
+            const dotEl = synthNode.querySelector('.connector-dot');
+
+            if (claimEl) {
+                claimEl.textContent = sections.consensus || 'Verdict delivered';
+                claimEl.dataset.loaded = 'true';
+            }
+            if (explEl) {
+                explEl.innerHTML = marked.parse(sections.breakdown || content.substring(0, 500));
+                explEl.dataset.loaded = 'true';
+            }
+            if (stanceEl) {
+                stanceEl.textContent = 'Synthesis';
+                stanceEl.className = 'stance-label text-[10px] font-bold uppercase tracking-wider text-status-neutral';
+            }
+            if (indicatorEl) indicatorEl.className = 'stance-indicator absolute left-0 top-0 bottom-0 w-1 bg-status-neutral';
+            if (dotEl) dotEl.className = 'connector-dot absolute left-[11px] top-6 w-[18px] h-[18px] rounded-full border-[3px] border-white dark:border-background-dark shadow-sm z-10 bg-status-neutral';
+        }
     }
 
     function sendMessage() {
-        const text = promptInput.value.trim();
+        const activeInput = (document.getElementById('empty-state').style.display !== 'none')
+            ? emptyPromptInput
+            : chatPromptInput;
+
+        const text = (activeInput ? activeInput.value : promptInput.value).trim();
         if (!text || isAwaitingResponse) return;
+
         if (!ws || ws.readyState !== WebSocket.OPEN) {
             setStatus('Connecting to the council...', true);
             return;
         }
+
+        // Hide empty state on send and show chat input container
+        const emptyState = document.getElementById('empty-state');
+        const chatInputContainer = document.getElementById('chat-input-container');
+        if (emptyState) emptyState.style.display = 'none';
+        if (chatInputContainer) chatInputContainer.style.display = 'block';
 
         // Track first prompt on mobile
         if (isMobile && !hasTrackedFirstPrompt && typeof gtag === 'function') {
@@ -364,7 +526,10 @@ document.addEventListener('DOMContentLoaded', () => {
         streamBuffers = {};
         appendUserMessage(text);
         updateChatHeight();
+
+        if (activeInput) activeInput.value = '';
         promptInput.value = '';
+
         resizePrompt();
         setWorkingState(true);
         setStatus('Council drafting your verdict...', true);
@@ -406,10 +571,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMobileDevice = window.innerWidth <= 767;
 
     function scrollToBottom() {
-        // Simple direct scroll to bottom - works on all devices
+        // Smooth scroll to bottom for polished UX
         if (chatMessages) {
-            // Use instant scroll to prevent jitter
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
         }
     }
 
@@ -531,33 +698,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    sendButton.addEventListener('click', sendMessage);
-    promptInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            sendMessage();
-        }
+    if (emptySendButton) emptySendButton.addEventListener('click', sendMessage);
+    if (chatSendButton) chatSendButton.addEventListener('click', sendMessage);
+
+    [emptyPromptInput, chatPromptInput].forEach(input => {
+        if (!input) return;
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+        input.addEventListener('input', () => {
+            const count = input.value.length;
+            const counter = input.parentElement.querySelector('.char-counter');
+            if (counter) counter.textContent = `${count}/200`;
+
+            resizePrompt();
+            updateSendState();
+            updateChatHeight();
+        });
+        input.addEventListener('focus', () => {
+            setTimeout(() => {
+                scrollToBottom();
+                adjustInputForKeyboard();
+            }, 250);
+        });
+        input.addEventListener('blur', () => {
+            const inputContainer = document.getElementById('chat-input-container');
+            if (inputContainer) {
+                inputContainer.style.bottom = '';
+            }
+        });
     });
 
-    promptInput.addEventListener('input', () => {
-        resizePrompt();
-        updateSendState();
-        updateChatHeight();
-    });
-
-    // Ensure the chat scrolls when input is focused on mobile so the input isn't hidden
-    promptInput.addEventListener('focus', () => {
-        setTimeout(() => {
-            scrollToBottom();
-            // Also adjust the chat input vertical position if the keyboard is visible.
-            adjustInputForKeyboard();
-        }, 250);
-    });
-    promptInput.addEventListener('blur', () => {
-        // Restore default bottom offset after blur
-        const inputContainer = document.querySelector('.chat-input-container');
-        if (inputContainer) {
-            inputContainer.style.bottom = '';
+    // Follow-up button click handler (event delegation)
+    document.body.addEventListener('click', (e) => {
+        const followUpBtn = e.target.closest('.follow-up-btn');
+        if (followUpBtn) {
+            const followUpText = followUpBtn.dataset.followup;
+            if (followUpText) {
+                // Set the follow-up as the new prompt
+                const activeInput = chatPromptInput || emptyPromptInput;
+                if (activeInput) {
+                    activeInput.value = followUpText;
+                    resizePrompt();
+                    updateSendState();
+                    sendMessage();
+                }
+            }
         }
     });
 
@@ -607,27 +796,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mobile Menu Logic
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    // Create overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'sidebar-overlay';
-    document.body.appendChild(overlay);
-
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', () => {
+    if (mobileMenuBtn && sidebar && sidebarOverlay) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             const opened = sidebar.classList.toggle('open');
-            overlay.classList.toggle('active', opened);
+            sidebarOverlay.classList.toggle('active', opened);
             document.body.classList.toggle('sidebar-open', opened);
             mobileMenuBtn.setAttribute('aria-expanded', String(opened));
         });
-    }
 
-    overlay.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-        document.body.classList.remove('sidebar-open');
-        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
-    });
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+            mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        });
+    }
 
     // Sidebar close behavior handled by overlay, nav item clicks, or hamburger toggle
 
@@ -905,99 +1091,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add user message
         appendUserMessage(debate.user_prompt);
+        lastPrompt = debate.user_prompt;
 
         // Create Shurahub message with debate content
         const messageElement = shurahubMessageTemplate.content.cloneNode(true);
         chatMessages.appendChild(messageElement);
         currentShurahubMessage = chatMessages.lastElementChild;
 
-        const debateContent = currentShurahubMessage.querySelector('.debate-content');
+        // Set the question title
+        const titleEl = currentShurahubMessage.querySelector('.debate-title-text');
+        if (titleEl) titleEl.textContent = debate.user_prompt;
 
-        // Add opener
-        if (debate.opener) {
-            const openerEntry = createDebateEntry('opener', 'Opener', debate.opener);
-            debateContent.appendChild(openerEntry);
-        }
-
-        // Add critiquer
-        if (debate.critiquer) {
-            const critiquerEntry = createDebateEntry('critiquer', 'Critiquer', debate.critiquer);
-            debateContent.appendChild(critiquerEntry);
-        }
-
-        // Add synthesizer to final answer
-        if (debate.synthesizer) {
-            const finalAnswer = currentShurahubMessage.querySelector('.final-answer');
-            if (finalAnswer) {
-                const synthStr = (typeof debate.synthesizer === 'string')
-                    ? debate.synthesizer
-                    : (debate.synthesizer?.response || JSON.stringify(debate.synthesizer || {}));
-                finalAnswer.innerHTML = marked.parse(synthStr);
+        // Populate Opener
+        if (debate.opener_response) {
+            const node = getOrCreateArgumentNode('opener', debate.opener_model);
+            if (node) {
+                const arg = parseArgument(debate.opener_response);
+                updateArgumentNode(node, arg);
             }
-            const synthesizerEntry = createDebateEntry('synthesizer', 'Judge', debate.synthesizer);
-            debateContent.appendChild(synthesizerEntry);
         }
 
-        // Show debate transcript button and feedback
-        const viewDebateButton = currentShurahubMessage.querySelector('.view-debate-button');
-        if (viewDebateButton) {
-            viewDebateButton.style.display = 'inline-flex';
+        // Populate Critiquer
+        if (debate.critiquer_response) {
+            const node = getOrCreateArgumentNode('critiquer', debate.critiquer_model);
+            if (node) {
+                const arg = parseArgument(debate.critiquer_response);
+                updateArgumentNode(node, arg);
+            }
         }
+
+        // Populate Synthesizer
+        if (debate.synthesizer_response) {
+            const sections = parseSynthesis(debate.synthesizer_response);
+            const summaryBullets = currentShurahubMessage.querySelector('.summary-bullets');
+            if (summaryBullets && sections.summary.length > 0) {
+                summaryBullets.innerHTML = sections.summary.map(bullet => `
+                    <div class="flex gap-2 items-start">
+                        <span class="material-symbols-outlined text-primary text-base mt-0.5 shrink-0">arrow_right_alt</span>
+                        <p class="text-sm leading-snug text-slate-600 dark:text-slate-300 font-medium">${bullet}</p>
+                    </div>
+                `).join('');
+            }
+
+            const synthNode = getOrCreateArgumentNode('synthesizer', debate.synthesizer_model);
+            if (synthNode) {
+                synthNode.querySelector('.claim-text').textContent = sections.consensus || 'Synthesis Result';
+                synthNode.querySelector('.explanation-text').textContent = sections.breakdown;
+            }
+        }
+
         const feedbackBlock = currentShurahubMessage.querySelector('.response-feedback');
         if (feedbackBlock) {
             feedbackBlock.hidden = false;
-            const finalAnsText = (typeof debate.synthesizer === 'string') ? debate.synthesizer : (debate.synthesizer?.response || '');
-            wireResponseFeedback(feedbackBlock, finalAnsText, debate.user_prompt);
+            wireResponseFeedback(feedbackBlock, debate.synthesizer_response, debate.user_prompt);
         }
 
-        // Update history list active state
         populateHistoryList();
         updateChatHeight();
         scrollToBottom();
     }
 
-    function createDebateEntry(role, label, content) {
-        const entry = document.createElement('div');
-        entry.classList.add('debate-entry');
-        entry.dataset.role = role;
+    function updateArgumentNode(node, arg) {
+        const claimEl = node.querySelector('.claim-text');
+        const explEl = node.querySelector('.explanation-text');
+        const evidenceEl = node.querySelector('.evidence-text');
+        const counterEl = node.querySelector('.counter-text');
+        const stanceEl = node.querySelector('.stance-label');
+        const indicatorEl = node.querySelector('.stance-indicator');
+        const dotEl = node.querySelector('.connector-dot');
 
-        const heading = document.createElement('div');
-        heading.className = 'debate-heading';
-
-        const roleBadge = document.createElement('span');
-        roleBadge.className = `role-badge ${role}`;
-        roleBadge.textContent = label;
-
-        const modelChip = document.createElement('span');
-        modelChip.className = 'model-chip';
-        // content can be a string or an object with shape {model, response}
-        if (content && typeof content === 'object') {
-            modelChip.textContent = content.model || 'Model';
-        } else {
-            modelChip.textContent = 'Model';
+        if (claimEl) claimEl.textContent = arg.claim;
+        if (explEl) explEl.textContent = arg.explanation;
+        if (evidenceEl) evidenceEl.textContent = arg.evidence;
+        if (counterEl) {
+            counterEl.textContent = arg.counterargument;
+            const counterSection = node.querySelector('.counter-section');
+            if (counterSection) counterSection.classList.toggle('hidden', !arg.counterargument);
         }
 
-        heading.appendChild(roleBadge);
-        heading.appendChild(modelChip);
+        if (stanceEl) {
+            stanceEl.textContent = `Stance: ${arg.stance}`;
+            let color = 'bg-primary';
+            let textColor = 'text-primary';
+            if (arg.stance.toLowerCase().includes('con')) { color = 'bg-status-con'; textColor = 'text-status-con'; }
+            else if (arg.stance.toLowerCase().includes('neutral')) { color = 'bg-status-neutral'; textColor = 'text-status-neutral'; }
 
-        const body = document.createElement('div');
-        body.className = 'stream-text';
-
-        // Ensure content is a string before parsing and handle object shapes (model, response)
-        let contentStr = '';
-        if (typeof content === 'string') {
-            contentStr = content;
-        } else if (content && typeof content === 'object') {
-            contentStr = content.response || JSON.stringify(content);
-        } else {
-            contentStr = '';
+            if (indicatorEl) indicatorEl.className = `stance-indicator absolute left-0 top-0 bottom-0 w-1 ${color}`;
+            if (dotEl) dotEl.className = `connector-dot absolute left-[11px] top-6 w-[18px] h-[18px] rounded-full border-[3px] border-white dark:border-background-dark shadow-sm z-10 ${color}`;
+            stanceEl.className = `stance-label text-[10px] font-bold uppercase tracking-wider ${textColor}`;
         }
-        body.innerHTML = marked.parse(contentStr);
-
-        entry.appendChild(heading);
-        entry.appendChild(body);
-
-        return entry;
     }
 
     function clearChat() {
@@ -1005,7 +1187,15 @@ document.addEventListener('DOMContentLoaded', () => {
         currentShurahubMessage = null;
         streamBuffers = {};
         currentDebateId = null;
-        promptInput.value = '';
+        if (emptyPromptInput) emptyPromptInput.value = '';
+        if (chatPromptInput) chatPromptInput.value = '';
+
+        // Ensure empty state is visible and chat input is hidden
+        const emptyState = document.getElementById('empty-state');
+        const chatInputContainer = document.getElementById('chat-input-container');
+        if (emptyState) emptyState.style.display = 'flex';
+        if (chatInputContainer) chatInputContainer.style.display = 'none';
+
         resizePrompt();
         updateSendState();
         populateHistoryList();
@@ -1189,4 +1379,94 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.USER_IS_LOGGED_IN) {
         fetchDebates();
     }
+
+    // --- Feedback Modal Logic ---
+    const feedbackModal = document.getElementById('feedback-modal');
+    const feedbackOptions = document.querySelectorAll('.feedback-option');
+    const feedbackNote = document.getElementById('feedback-note');
+    const feedbackSubmit = document.getElementById('feedback-submit');
+    const feedbackSkip = document.getElementById('feedback-skip');
+    const feedbackStatus = document.getElementById('feedback-status');
+    let selectedRating = null;
+
+    function showFeedbackModal() {
+        if (feedbackModal) {
+            feedbackModal.classList.remove('hidden');
+            feedbackModal.classList.add('flex');
+            selectedRating = null;
+            feedbackOptions.forEach(opt => opt.classList.remove('border-primary', 'bg-primary/10'));
+            if (feedbackSubmit) feedbackSubmit.disabled = true;
+            if (feedbackNote) feedbackNote.value = '';
+            if (feedbackStatus) feedbackStatus.textContent = '';
+        }
+    }
+
+    function hideFeedbackModal() {
+        if (feedbackModal) {
+            feedbackModal.classList.add('hidden');
+            feedbackModal.classList.remove('flex');
+        }
+    }
+
+    feedbackOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            feedbackOptions.forEach(opt => opt.classList.remove('border-primary', 'bg-primary/10'));
+            option.classList.add('border-primary', 'bg-primary/10');
+            selectedRating = option.dataset.rating;
+            if (feedbackSubmit) feedbackSubmit.disabled = false;
+        });
+    });
+
+    if (feedbackSkip) {
+        feedbackSkip.addEventListener('click', hideFeedbackModal);
+    }
+
+    if (feedbackModal) {
+        feedbackModal.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) {
+                hideFeedbackModal();
+            }
+        });
+    }
+
+    if (feedbackSubmit) {
+        feedbackSubmit.addEventListener('click', async () => {
+            if (!selectedRating) return;
+
+            feedbackSubmit.disabled = true;
+            if (feedbackStatus) feedbackStatus.textContent = 'Sending...';
+
+            const context = window.currentFeedbackContext || {};
+            const payload = {
+                email: null,
+                category: 'council_response',
+                message: `rating=${selectedRating}; prompt="${(context.prompt || '').slice(0, 140)}"; verdict="${(context.verdict || '').slice(0, 160)}"${feedbackNote && feedbackNote.value.trim() ? `; note=${feedbackNote.value.trim()}` : ''}`,
+            };
+
+            try {
+                const response = await fetch('/engagement/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) throw new Error('Request failed');
+
+                if (feedbackStatus) feedbackStatus.textContent = 'Thanks for the signal!';
+
+                setTimeout(hideFeedbackModal, 1000);
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                if (feedbackStatus) feedbackStatus.textContent = 'Unable to send. Try again.';
+                feedbackSubmit.disabled = false;
+            }
+        });
+    }
+
+    // Also wire up the "Rate this verdict" button in the debate
+    document.body.addEventListener('click', (e) => {
+        if (e.target.closest('.open-feedback-modal')) {
+            showFeedbackModal();
+        }
+    });
 });

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Golden Answer Consensus</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "gold-glow": "#FFD700",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased selection:bg-primary/30">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden pb-24">
+<!-- Sticky Header -->
+<header class="sticky top-0 z-40 flex items-center justify-between bg-background-light/90 dark:bg-background-dark/90 px-4 py-3 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-900 dark:text-white group">
+<span class="material-symbols-outlined group-hover:-translate-x-0.5 transition-transform" style="font-size: 24px;">arrow_back</span>
+</button>
+<h2 class="text-base font-bold leading-tight tracking-tight text-slate-900 dark:text-white">Debate Conclusion</h2>
+<div class="size-10"></div> <!-- Spacer for center alignment -->
+</header>
+<!-- Main Content -->
+<main class="flex flex-col gap-6 px-4 pt-6">
+<!-- Debate Topic Headline -->
+<div class="flex flex-col gap-1">
+<span class="text-xs font-semibold uppercase tracking-wider text-primary">Topic</span>
+<h1 class="text-2xl font-bold leading-tight text-slate-900 dark:text-white">
+                    Should we implement a 4-day work week?
+                </h1>
+</div>
+<!-- Golden Answer Card -->
+<!-- Using custom CSS for the specific golden glow effect requested -->
+<div class="relative overflow-hidden rounded-xl border border-yellow-500/40 bg-gradient-to-br from-yellow-500/10 to-yellow-900/10 shadow-[0_0_20px_rgba(234,179,8,0.1)] transition-all">
+<!-- Abstract Background Pattern -->
+<div class="absolute -right-10 -top-10 size-40 rounded-full bg-yellow-500/10 blur-3xl"></div>
+<div class="absolute -left-10 -bottom-10 size-40 rounded-full bg-yellow-500/5 blur-3xl"></div>
+<div class="relative flex flex-col gap-4 p-5 sm:p-6">
+<!-- Badge -->
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-yellow-400 filled" style="font-size: 16px; font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-xs font-semibold text-yellow-400">Consensus Reached</span>
+</div>
+<span class="text-xs font-medium text-yellow-500/70">Based on 5 Models</span>
+</div>
+<!-- Title & Answer -->
+<div class="space-y-2">
+<h2 class="text-lg font-bold text-yellow-400">The Golden Answer</h2>
+<p class="text-lg font-medium leading-relaxed text-slate-800 dark:text-yellow-50/95">
+                            Yes, purely on a trial basis. The consensus suggests a 6-month pilot program focused on output-based metrics rather than hours, as productivity gains outweigh scheduling risks.
+                        </p>
+</div>
+</div>
+</div>
+<!-- Confidence Score -->
+<div class="flex flex-col gap-3 rounded-lg bg-white dark:bg-[#1a2632] p-4 shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">analytics</span>
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Confidence Score</p>
+</div>
+<span class="text-sm font-bold text-primary">94%</span>
+</div>
+<div class="h-2.5 w-full rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+<div class="h-full rounded-full bg-primary transition-all duration-1000 ease-out" style="width: 94%;"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400">
+                    High agreement among GPT-4, Claude 3, and Llama 3 models.
+                </p>
+</div>
+<!-- Key Takeaways (Description List) -->
+<div class="flex flex-col gap-4">
+<h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">Supporting Points</h3>
+<div class="flex flex-col gap-3">
+<!-- Item 1 -->
+<div class="flex items-start gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a2632] p-4 shadow-sm">
+<div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
+<span class="material-symbols-outlined" style="font-size: 16px;">check</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Retention</p>
+<p class="text-sm text-slate-800 dark:text-slate-200 leading-snug">Higher employee retention predicted across all departments.</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-start gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a2632] p-4 shadow-sm">
+<div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
+<span class="material-symbols-outlined" style="font-size: 16px;">trending_down</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Costs</p>
+<p class="text-sm text-slate-800 dark:text-slate-200 leading-snug">Operational costs expected to reduce by ~15%.</p>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex items-start gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a2632] p-4 shadow-sm">
+<div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400">
+<span class="material-symbols-outlined" style="font-size: 16px;">priority_high</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Protocol</p>
+<p class="text-sm text-slate-800 dark:text-slate-200 leading-snug">Requires implementation of strict async communication protocols.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="h-4"></div>
+</main>
+<!-- Bottom Actions Sticky Bar -->
+<div class="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark p-4 pb-8 backdrop-blur-lg">
+<div class="mx-auto flex w-full max-w-md gap-3">
+<button class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-3 text-sm font-semibold text-primary active:scale-95 transition-transform hover:bg-primary/20">
+<span class="material-symbols-outlined" style="font-size: 20px;">menu_book</span>
+                    View Sources
+                </button>
+<button class="flex flex-[2] items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/30 active:scale-95 transition-transform hover:bg-primary/90">
+<span class="material-symbols-outlined" style="font-size: 20px;">ios_share</span>
+                    Share Result
+                </button>
+</div>
+</div>
+</div>
+</body></html>
