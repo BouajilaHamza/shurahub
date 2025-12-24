@@ -12,7 +12,33 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#8B5CF6",
+                        "secondary": "#EC4899",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                        "card-dark": "#1F2937",
+                        "status-con": "#EF4444",
+                        "status-neutral": "#F59E0B",
+                        "status-pro": "#8B5CF6",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.75rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/static/js/theme.js" defer></script>
     {% include 'analytics.html' %}
@@ -28,7 +54,7 @@
             <div class="sidebar-header">
                 <a href="/" class="logo-link">
                     <div class="logo-icon-wrapper">
-                        <span class="material-icons-outlined">check</span>
+                        <img src="/static/favicon.svg" alt="Shurahub" width="24" height="24">
                     </div>
                     <span class="logo-text">Shurahub</span>
                 </a>
@@ -83,7 +109,7 @@
                     </button>
                     <a href="/" class="header-logo-mobile">
                         <div class="logo-icon-small">
-                            <span class="material-icons-outlined">check</span>
+                            <img src="/static/favicon.svg" alt="Shurahub" width="18" height="18">
                         </div>
                         <span class="logo-text-small">Shurahub</span>
                     </a>
@@ -112,41 +138,64 @@
                 <div class="chat-status" id="chat-status">Connected</div>
                 <div class="chat-messages" id="chat-messages">
                     <!-- Empty State -->
-                    <div id="empty-state" class="empty-state">
-                        <div class="empty-state-content">
-                            <div class="empty-state-header">
-                                <h2 class="empty-state-title">
-                                    Ask the <span class="gradient-text">Council</span>
-                                </h2>
-                                <p class="empty-state-subtitle">
-                                    Describe your dilemma. The AI council will debate the pros, cons, and nuances for
-                                    you.
-                                </p>
+                    <div id="empty-state"
+                        class="flex flex-col flex-grow items-center justify-center text-center px-4 max-w-md mx-auto">
+                        <div class="mb-8 w-full text-left">
+                            <h2 class="text-3xl font-extrabold tracking-tight leading-tight mb-2">
+                                Ask the <span
+                                    class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Council</span>
+                            </h2>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                                Describe your dilemma. The AI council will debate the pros, cons, and nuances for you.
+                            </p>
+                        </div>
+
+                        <div class="w-full space-y-6">
+                            <div class="group">
+                                <label class="block text-sm font-semibold mb-2 text-left text-slate-900 dark:text-white"
+                                    for="prompt-input">
+                                    What are you trying to decide?
+                                </label>
+                                <div class="relative">
+                                    <textarea id="empty-prompt-input" rows="4"
+                                        class="w-full bg-slate-50 dark:bg-card-dark border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none shadow-sm text-slate-900 dark:text-white placeholder-slate-400"
+                                        placeholder="e.g., Should I quit my job to start a bakery, or stay for the promotion?"></textarea>
+                                    <div
+                                        class="char-counter absolute bottom-3 right-3 text-xs text-slate-400 bg-white dark:bg-card-dark px-1 rounded">
+                                        0/200
+                                    </div>
+                                </div>
                             </div>
+
+                            <button id="empty-send-button"
+                                class="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 active:scale-[0.98] transition-all text-white font-bold text-lg py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-2 group">
+                                <span class="send-button-text">Start Debate</span>
+                                <span
+                                    class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                            </button>
 
                             <!-- Quick Start Prompts -->
-                            <div class="quick-prompts">
-                                <button class="quick-start-prompt"
+                            <div class="grid grid-cols-1 gap-3 mt-6">
+                                <button
+                                    class="quick-start-prompt flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left"
                                     data-prompt="Should I quit my job to start a bakery, or stay for the promotion?">
-                                    <span class="prompt-icon">🎯</span>
-                                    <span class="prompt-text">Should I quit my job to start a bakery, or stay for the
-                                        promotion?</span>
+                                    <span class="material-symbols-outlined text-primary text-xl">work</span>
+                                    <span
+                                        class="prompt-text text-sm font-medium text-slate-700 dark:text-slate-300">Quit
+                                        job for bakery or stay for promotion?</span>
                                 </button>
-                                <button class="quick-start-prompt"
+                                <button
+                                    class="quick-start-prompt flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left"
                                     data-prompt="Should I take the job offer or stay at my current company?">
-                                    <span class="prompt-icon">💼</span>
-                                    <span class="prompt-text">Take the job offer or stay at my current company?</span>
-                                </button>
-                                <button class="quick-start-prompt"
-                                    data-prompt="Should I invest in crypto or stick to traditional stocks?">
-                                    <span class="prompt-icon">📈</span>
-                                    <span class="prompt-text">Crypto or traditional stocks?</span>
+                                    <span class="material-symbols-outlined text-primary text-xl">compare_arrows</span>
+                                    <span
+                                        class="prompt-text text-sm font-medium text-slate-700 dark:text-slate-300">Take
+                                        the job offer or stay at current company?</span>
                                 </button>
                             </div>
 
-                            <!-- Social Proof -->
-                            <div class="powered-by">
-                                <span class="material-icons-outlined">bolt</span>
+                            <div class="powered-by flex items-center justify-center gap-2 text-xs text-slate-400 mt-4">
+                                <span class="material-symbols-outlined text-sm">bolt</span>
                                 <span>Powered by Multi-Agent AI</span>
                             </div>
                         </div>
@@ -156,16 +205,28 @@
                 </div>
 
                 <!-- Input Area -->
-                <div class="chat-input-container">
+                <div class="chat-input-container" id="chat-input-container" style="display: none;">
+                    <!-- Reply Context Banner -->
+                    <div id="reply-context-banner"
+                        class="hidden mb-2 p-2 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                            <span class="material-symbols-outlined text-primary">reply</span>
+                            <span class="reply-context-text truncate max-w-[250px]">Replying to...</span>
+                        </div>
+                        <button id="cancel-reply-btn" class="text-slate-500 hover:text-red-500 transition-colors">
+                            <span class="material-symbols-outlined text-lg">close</span>
+                        </button>
+                    </div>
                     <div class="chat-input-wrapper">
-                        <label class="input-label" for="prompt-input">What are you trying to decide?</label>
+                        <label class="input-label" for="chat-prompt-input">What are you trying to decide?</label>
                         <div class="chat-input">
-                            <textarea id="prompt-input" rows="1"
+                            <textarea id="chat-prompt-input" rows="1"
+                                class="w-full bg-transparent border-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                                 placeholder="e.g., Should I quit my job to start a bakery, or stay for the promotion?"></textarea>
                             <div class="char-counter">0/200</div>
                         </div>
                     </div>
-                    <button id="send-button" class="send-button" aria-label="Start Debate">
+                    <button id="chat-send-button" class="send-button" aria-label="Start Debate">
                         <span class="send-button-text">Start Debate</span>
                         <span class="material-icons-outlined">arrow_forward</span>
                     </button>
@@ -199,63 +260,160 @@
     </template>
 
     <template id="shurahub-message-template">
-        <div class="message shurahub-message">
-            <div class="message-content">
-                <div class="verdict-chip">
-                    <span class="material-icons-outlined">check_circle</span>
-                    Golden Answer
-                </div>
-                <div class="final-answer"></div>
-
-                <!-- Bias/Weight Meter -->
-                <div class="debate-weight-meter" style="display: none;">
-                    <div class="weight-meter-header">
-                        <span class="weight-meter-label">Decision Breakdown</span>
-                    </div>
-                    <div class="weight-meter-bar">
-                        <div class="weight-opener" style="width: 50%;">
-                            <span class="weight-label">Opener</span>
-                            <span class="weight-percent">50%</span>
+        <div class="message shurahub-message w-full mt-4">
+            <div class="message-content w-full">
+                <!-- Golden Answer Summary Box (Visible at top of this result) -->
+                <div class="summary-box mb-6">
+                    <div
+                        class="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-white dark:from-[#1e252e] dark:to-[#161c23] border border-primary/20 shadow-md">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div
+                                    class="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
+                                    <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                                    <span>Golden Answer</span>
+                                </div>
+                                <span
+                                    class="confidence-pill bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">ANALYZING...</span>
+                            </div>
+                            <div class="summary-bullets space-y-2">
+                                <!-- Populated by JS -->
+                                <div class="flex gap-2 items-start animate-pulse">
+                                    <div class="w-4 h-4 rounded bg-slate-200 dark:bg-slate-700 mt-1"></div>
+                                    <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mt-1"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="weight-critiquer" style="width: 50%;">
-                            <span class="weight-label">Critiquer</span>
-                            <span class="weight-percent">50%</span>
-                        </div>
-                    </div>
-                    <div class="weight-meter-insight">
-                        <p class="weight-insight-text"></p>
                     </div>
                 </div>
 
-                <div class="debate-actions">
-                    <div class="debate-meta">
-                        <span class="material-icons-outlined">forum</span>
-                        3-model council · live transcript
+                <!-- Main Question Heading (Matches original prompt) -->
+                <div class="debate-question mb-8">
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white leading-tight debate-title-text"></h2>
+                    <div
+                        class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] font-medium mt-3 uppercase tracking-wide">
+                        <span class="bg-slate-200 dark:bg-white/10 px-2 py-1 rounded">Decision Analysis</span>
+                        <span>•</span>
+                        <span class="model-count">3 Models</span>
+                        <span>•</span>
+                        <span class="status-time">Live</span>
                     </div>
-                    <button class="view-debate-button" aria-expanded="false">
-                        <span class="label">Open debate transcript</span>
-                        <span class="material-icons-outlined chevron">expand_more</span>
+                </div>
+
+                <!-- Debate Tree Layout -->
+                <div class="debate-tree relative flex flex-col gap-6">
+                    <!-- Vertical Connector Line -->
+                    <div class="absolute left-[19px] top-4 bottom-0 w-[2px] bg-slate-200 dark:bg-white/10 rounded-full">
+                    </div>
+
+                    <!-- Nodes will be injected here (Opener, Critiquer, etc.) -->
+                    <div class="debate-nodes-container flex flex-col gap-6">
+                        <div class="node-slot" data-role="opener"></div>
+                        <div class="node-slot" data-role="critiquer"></div>
+                        <div class="node-slot" data-role="synthesizer"></div>
+                    </div>
+                </div>
+
+                <!-- Feedback Trigger Button -->
+                <div class="feedback-trigger mt-6 flex justify-center" hidden>
+                    <button
+                        class="open-feedback-modal flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 text-sm font-medium text-slate-700 dark:text-slate-300 hover:border-primary transition-all">
+                        <span class="material-symbols-outlined text-lg text-primary">rate_review</span>
+                        <span>Rate this verdict</span>
                     </button>
                 </div>
-                <div class="debate-container" hidden>
-                    <div class="debate-content timeline"></div>
-                </div>
-                <div class="response-feedback" hidden>
-                    <div class="feedback-header">
-                        <p>Was this council verdict on point?</p>
-                        <div class="feedback-actions">
-                            <button class="feedback-chip" data-rating="helpful">👍 Nailed it</button>
-                            <button class="feedback-chip" data-rating="mixed">😐 Mixed</button>
-                            <button class="feedback-chip" data-rating="off_target">👎 Off target</button>
+
+                <!-- Council's Follow-up Suggestions (styled as part of the verdict) -->
+                <div class="follow-up-suggestions relative pl-12 mt-6" hidden>
+                    <!-- Connector dot like other nodes -->
+                    <div
+                        class="connector-dot absolute left-[11px] top-4 w-[18px] h-[18px] rounded-full border-[3px] border-white dark:border-background-dark bg-gradient-to-r from-primary to-secondary shadow-sm z-10">
+                    </div>
+
+                    <div
+                        class="bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20 rounded-xl p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="material-symbols-outlined text-primary">forum</span>
+                            <h4 class="text-sm font-semibold text-slate-900 dark:text-white">The Council suggests
+                                exploring:</h4>
+                        </div>
+                        <div class="follow-up-buttons flex flex-col gap-2">
+                            <!-- Populated by AI - these are loading placeholders -->
+                            <div class="h-10 bg-slate-200/50 dark:bg-white/5 rounded-lg animate-pulse"></div>
+                            <div class="h-10 bg-slate-200/50 dark:bg-white/5 rounded-lg animate-pulse"></div>
                         </div>
                     </div>
-                    <label class="feedback-note">
-                        <span>What should we adjust?</span>
-                        <textarea rows="2" placeholder="Quick note for the council (optional)"></textarea>
-                    </label>
-                    <div class="feedback-footer">
-                        <button class="submit-feedback" disabled>Send feedback</button>
-                        <span class="feedback-status" role="status"></span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Argument Card Template -->
+    <template id="argument-card-template">
+        <div class="relative pl-12 group debate-node">
+            <!-- Connector Dot -->
+            <div
+                class="connector-dot absolute left-[11px] top-6 w-[18px] h-[18px] rounded-full border-[3px] border-white dark:border-background-dark bg-primary shadow-sm z-10">
+            </div>
+
+            <!-- Connector Line Extension (For indented responses) -->
+            <div
+                class="connector-elbow absolute left-[19px] top-[-24px] bottom-auto h-[50px] w-8 border-l-[2px] border-b-[2px] border-slate-200 dark:border-white/10 rounded-bl-xl z-0 hidden">
+            </div>
+
+            <!-- Card -->
+            <div
+                class="relative bg-white dark:bg-card-dark rounded-xl shadow-sm border border-slate-200 dark:border-white/5 overflow-hidden transition-all hover:shadow-md">
+                <div class="stance-indicator absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+                <div class="p-4">
+                    <!-- Card Header -->
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex flex-col">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span
+                                    class="stance-label text-[10px] font-bold uppercase tracking-wider text-primary">Stance:
+                                    Unknown</span>
+                                <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                <span
+                                    class="model-name text-[10px] font-medium text-slate-500 dark:text-slate-400">Model
+                                    Name</span>
+                            </div>
+                            <h3 class="claim-text font-bold text-base text-slate-900 dark:text-white leading-snug"></h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Body (Progressive Disclosure) -->
+                    <div class="argument-details overflow-hidden transition-all">
+                        <div class="explanation-text text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+                        </div>
+                        <div
+                            class="extended-details hidden py-3 border-t border-slate-100 dark:border-white/5 space-y-3">
+                            <div class="evidence-section">
+                                <span class="text-[10px] font-bold uppercase text-slate-400">Supporting Evidence</span>
+                                <p class="evidence-text text-sm mt-1"></p>
+                            </div>
+                            <div class="counter-section">
+                                <span class="text-[10px] font-bold uppercase text-slate-400">Potential Counter</span>
+                                <p class="counter-text text-sm mt-1 italic"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5">
+                        <div class="flex items-center gap-3">
+                            <button
+                                class="reply-to-argument-btn flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-lg">reply</span>
+                                <span>Reply</span>
+                            </button>
+                        </div>
+                        <button
+                            class="expand-argument-btn flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+                            <span class="btn-label">Expand</span> <span
+                                class="material-symbols-outlined text-lg">expand_more</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -265,65 +423,6 @@
     <script src="/static/js/script.js"></script>
     <script>
         window.USER_IS_LOGGED_IN = {{ 'true' if user else 'false' }};
-    </script>
-    <script>
-        // Character counter
-        const promptInput = document.getElementById('prompt-input');
-        const charCounter = document.querySelector('.char-counter');
-
-        if (promptInput && charCounter) {
-            promptInput.addEventListener('input', () => {
-                const count = promptInput.value.length;
-                charCounter.textContent = `${count}/200`;
-            });
-        }
-
-        // Hide empty state when message is sent
-        document.getElementById('send-button').addEventListener('click', () => {
-            const emptyState = document.getElementById('empty-state');
-            if (emptyState) emptyState.style.display = 'none';
-        });
-
-        document.getElementById('prompt-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                const emptyState = document.getElementById('empty-state');
-                if (emptyState) emptyState.style.display = 'none';
-            }
-        });
-
-        // Mobile sidebar toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-        if (mobileMenuBtn && sidebar && sidebarOverlay) {
-            mobileMenuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('open');
-                sidebarOverlay.classList.toggle('active');
-                document.body.classList.toggle('sidebar-open');
-            });
-
-            sidebarOverlay.addEventListener('click', () => {
-                sidebar.classList.remove('open');
-                sidebarOverlay.classList.remove('active');
-                document.body.classList.remove('sidebar-open');
-            });
-        }
-
-        // Bottom nav active state
-        const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
-        const navNew = document.getElementById('nav-new');
-
-        if (navNew) {
-            navNew.addEventListener('click', (e) => {
-                e.preventDefault();
-                bottomNavItems.forEach(item => item.classList.remove('active'));
-                navNew.classList.add('active');
-                // Trigger new debate
-                const newDebateBtn = document.getElementById('new-debate-btn');
-                if (newDebateBtn) newDebateBtn.click();
-            });
-        }
     </script>
 
     <!-- Register to Save Modal -->
@@ -340,6 +439,55 @@
             <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
                 Already have an account? <a href="/login" style="color: var(--accent-primary);">Login</a>
             </p>
+        </div>
+    </div>
+
+    <!-- Feedback Modal Popup -->
+    <div id="feedback-modal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div
+            class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl max-w-sm w-[90%] mx-auto p-6 animate-[scaleIn_0.2s_ease-out]">
+            <div class="text-center mb-4">
+                <span class="material-symbols-outlined text-4xl text-primary mb-2">rate_review</span>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Was this verdict on point?</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Your feedback helps improve the council.</p>
+            </div>
+
+            <div class="feedback-rating-options flex justify-center gap-3 mb-4">
+                <button
+                    class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all"
+                    data-rating="helpful">
+                    <span class="text-2xl">👍</span>
+                    <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Helpful</span>
+                </button>
+                <button
+                    class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all"
+                    data-rating="mixed">
+                    <span class="text-2xl">😐</span>
+                    <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Mixed</span>
+                </button>
+                <button
+                    class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all"
+                    data-rating="off_target">
+                    <span class="text-2xl">👎</span>
+                    <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Off target</span>
+                </button>
+            </div>
+
+            <textarea id="feedback-note" rows="2"
+                class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/10 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary outline-none mb-4 text-slate-900 dark:text-white"
+                placeholder="Quick note for the council (optional)"></textarea>
+
+            <div class="flex gap-3">
+                <button id="feedback-skip"
+                    class="flex-1 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">Maybe
+                    later</button>
+                <button id="feedback-submit"
+                    class="flex-1 py-2.5 rounded-lg bg-primary text-white text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50"
+                    disabled>Send</button>
+            </div>
+
+            <p id="feedback-status" class="text-xs text-center text-slate-500 mt-3" role="status"></p>
         </div>
     </div>
 

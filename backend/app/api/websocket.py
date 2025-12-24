@@ -5,6 +5,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.core.config import supabase_client, AVAILABLE_MODELS
 from app.services.ai_service import AIService
 from app.services.debate_service import DebateService
+from app.models import ARGUMENT_FORMAT_INSTRUCTIONS, SYNTHESIS_FORMAT_INSTRUCTIONS
 
 router = APIRouter()
 
@@ -40,6 +41,9 @@ async def websocket_endpoint(
 
     await websocket.accept()
     print(f"WebSocket connection accepted for {'user ' + user_id if user_id else 'guest mode'}")
+
+    # Maintain conversation context for the session
+    conversation_context = []  # Stores summaries of past debates for context
 
     try:
         while True:
@@ -84,47 +88,108 @@ async def websocket_endpoint(
 
                 # --- The Debate ---
                 
+                # Build context from previous debates (for follow-up questions)
+                context_summary = ""
+                if conversation_context:
+                    context_summary = "\n\nPREVIOUS CONVERSATION CONTEXT:\n" + "\n".join([
+                        f"- Q: {ctx['question'][:100]}... → A: {ctx['answer'][:100]}..."
+                        for ctx in conversation_context[-3:]  # Keep last 3 debates for context
+                    ])
+                
                 # 1. The Opener
                 opener_model_req = models_to_use[0]
-                opener_history = [{'role': 'user', 'content': user_message}]
+                opener_system_prompt = f'''You are a debater in the Shurahub AI Council. Your role is to provide the OPENING argument.
+
+RULES:
+- Be CONCISE. No long paragraphs.
+- Users want to SKIM, not read essays.
+- Each field has a character limit - respect it.
+- Focus ONLY on the user's question. Do not go off-topic.
+
+{ARGUMENT_FORMAT_INSTRUCTIONS}'''
+                
+                user_prompt = user_message
+                if context_summary:
+                    user_prompt = f"{user_message}{context_summary}"
+                
+                opener_history = [
+                    {'role': 'system', 'content': opener_system_prompt},
+                    {'role': 'user', 'content': user_prompt}
+                ]
                 opener_response, opener_model_res = await stream_stage(opener_model_req, opener_history, "opener")
 
                 # 2. The Critiquer
                 critiquer_model_req = models_to_use[1]
-                critique_prompt = f'''Your colleague, {opener_model_res}, has responded to the user. Your task is to critique their response and offer a better, more refined alternative. Directly address their points.\n\nUser\'s query: "{user_message}"\n\n{opener_model_res}\'s response: "{opener_response}"'''
+                critique_prompt = f'''You are critiquing your colleague {opener_model_res}'s argument.
+
+RULES:
+- Be CONCISE. No long paragraphs.
+- Users want to SKIM, not read essays.
+- Each field has a character limit - respect it.
+
+User's query: "{user_message}"
+{opener_model_res}'s response: "{opener_response}"
+
+{ARGUMENT_FORMAT_INSTRUCTIONS}'''
                 critiquer_history = [{'role': 'user', 'content': critique_prompt}]
                 critiquer_response, critiquer_model_res = await stream_stage(critiquer_model_req, critiquer_history, "critiquer")
 
                 # 3. The Synthesizer (Judge)
                 synthesizer_model_req = models_to_use[2]
-                synthesis_prompt = f'''You are the final judge in a debate between two AI colleagues, {opener_model_res} and {critiquer_model_res}, who are responding to a user's query. Your task is to synthesize their discussion and provide the single best possible answer to the user.
+                synthesis_prompt = f'''You are the JUDGE providing the Golden Answer.
 
 User's Query: "{user_message}"
 
-**The Debate:**
+The Debate:
+{opener_model_res}: "{opener_response}"
+{critiquer_model_res}: "{critiquer_response}"
 
-**{opener_model_res} said:** "{opener_response}"
+RULES:
+- Be CONCISE. No essays.
+- Keep each section SHORT.
+- Users want a clear answer, not paragraphs.
 
-**{critiquer_model_res} critiqued and added:** "{critiquer_response}"
-
-IMPORTANT INSTRUCTIONS FOR YOUR RESPONSE:
-1. Provide a clear, definitive answer to the user's query
-2. Include inline citation markers to show which arguments influenced your decision:
-   - Use [O1], [O2], [O3] etc. when referencing {opener_model_res}'s arguments
-   - Use [C1], [C2], [C3] etc. when referencing {critiquer_model_res}'s arguments
-3. After your main answer, include a "Citations:" section that lists each marker with the specific quote
-
-Example format:
-"You should choose option A[O1] because of its scalability[O2], though option B has better performance[C1] in some cases."
-
-Citations:
-[O1]: "Option A is the industry standard"
-[O2]: "A scales to millions of users easily"
-[C1]: "B benchmarks 40% faster on initial load"
-
-Now provide your final answer with citations:'''
+{SYNTHESIS_FORMAT_INSTRUCTIONS}'''
                 synthesizer_history = [{'role': 'user', 'content': synthesis_prompt}]
                 synthesizer_response, synthesizer_model_res = await stream_stage(synthesizer_model_req, synthesizer_history, "synthesizer")
+
+                # Generate contextual follow-up suggestions from the council
+                try:
+                    followup_prompt = f'''Based on this debate about: "{user_message}"
+                    
+The verdict was: {synthesizer_response[:300] if synthesizer_response else "provided"}
+
+Generate exactly 3 SHORT follow-up questions the user might want to ask next. Each question should be:
+- Directly relevant to their decision
+- Actionable and specific
+- Under 60 characters
+
+Format:
+1. [question]
+2. [question]  
+3. [question]'''
+                    
+                    followup_response, _ = await ai_service.get_bot_response(
+                        synthesizer_model_req,
+                        [{'role': 'user', 'content': followup_prompt}]
+                    )
+                    
+                    # Parse and send follow-up suggestions
+                    import re
+                    suggestions = re.findall(r'\d\.\s*(.+)', followup_response)[:3]
+                    if suggestions:
+                        await websocket.send_json({
+                            "type": "followups",
+                            "suggestions": [s.strip()[:60] for s in suggestions]
+                        })
+                except Exception as followup_error:
+                    print(f"Follow-up generation failed (non-critical): {followup_error}")
+
+                # Save to conversation context for follow-up questions
+                conversation_context.append({
+                    'question': user_message,
+                    'answer': synthesizer_response[:200] if synthesizer_response else 'No answer'
+                })
 
                 # --- Log debate to the database ---
                 if user_id:

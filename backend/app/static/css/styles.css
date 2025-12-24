@@ -85,13 +85,8 @@ body.sidebar-open .main-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    color: var(--accent-primary);
-    box-shadow: var(--shadow-sm);
+    width: 24px;
+    height: 24px;
 }
 
 .logo-icon-wrapper .material-icons-outlined {
@@ -391,9 +386,9 @@ body.sidebar-open .main-content {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 480px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 0;
+    padding: 0 1.5rem;
     box-sizing: border-box;
     flex: 1;
     position: relative;
@@ -608,7 +603,9 @@ body.sidebar-open .main-content {
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
-#prompt-input {
+#prompt-input,
+#chat-prompt-input,
+#empty-prompt-input {
     width: 100%;
     background: transparent;
     border: none;
@@ -624,11 +621,15 @@ body.sidebar-open .main-content {
     box-sizing: border-box;
 }
 
-#prompt-input:focus {
+#prompt-input:focus,
+#chat-prompt-input:focus,
+#empty-prompt-input:focus {
     outline: none;
 }
 
-#prompt-input::placeholder {
+#prompt-input::placeholder,
+#chat-prompt-input::placeholder,
+#empty-prompt-input::placeholder {
     color: var(--text-secondary);
     opacity: 0.5;
 }
@@ -1318,12 +1319,17 @@ body.sidebar-open .main-content {
 /* Tablet */
 @media (min-width: 640px) {
     .chat-shell {
-        max-width: 560px;
+        max-width: 720px;
     }
 }
 
 /* Desktop */
 @media (min-width: 768px) {
+    .chat-shell {
+        max-width: 900px;
+        padding: 0 2rem;
+    }
+
     .sidebar {
         display: flex;
     }
