@@ -324,32 +324,25 @@
                     </button>
                 </div>
 
-                <!-- Follow-up Suggestions -->
-                <div class="follow-up-suggestions mt-8 pt-6 border-t border-slate-200 dark:border-white/10" hidden>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="material-symbols-outlined text-primary">psychology_alt</span>
-                        <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Continue exploring</h4>
+                <!-- Council's Follow-up Suggestions (styled as part of the verdict) -->
+                <div class="follow-up-suggestions relative pl-12 mt-6" hidden>
+                    <!-- Connector dot like other nodes -->
+                    <div
+                        class="connector-dot absolute left-[11px] top-4 w-[18px] h-[18px] rounded-full border-[3px] border-white dark:border-background-dark bg-gradient-to-r from-primary to-secondary shadow-sm z-10">
                     </div>
-                    <div class="follow-up-buttons flex flex-col gap-2">
-                        <!-- Default follow-ups, will be replaced by JS with context-aware ones -->
-                        <button
-                            class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
-                            data-followup="What are the main risks I should consider?">
-                            <span class="material-symbols-outlined text-primary text-lg">warning</span>
-                            <span>What are the main risks I should consider?</span>
-                        </button>
-                        <button
-                            class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
-                            data-followup="How can I validate this decision before committing?">
-                            <span class="material-symbols-outlined text-primary text-lg">fact_check</span>
-                            <span>How can I validate this decision before committing?</span>
-                        </button>
-                        <button
-                            class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
-                            data-followup="What would you recommend as the next steps?">
-                            <span class="material-symbols-outlined text-primary text-lg">arrow_forward</span>
-                            <span>What would you recommend as the next steps?</span>
-                        </button>
+
+                    <div
+                        class="bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20 rounded-xl p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="material-symbols-outlined text-primary">forum</span>
+                            <h4 class="text-sm font-semibold text-slate-900 dark:text-white">The Council suggests
+                                exploring:</h4>
+                        </div>
+                        <div class="follow-up-buttons flex flex-col gap-2">
+                            <!-- Populated by AI - these are loading placeholders -->
+                            <div class="h-10 bg-slate-200/50 dark:bg-white/5 rounded-lg animate-pulse"></div>
+                            <div class="h-10 bg-slate-200/50 dark:bg-white/5 rounded-lg animate-pulse"></div>
+                        </div>
                     </div>
                 </div>
             </div>
