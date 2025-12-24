@@ -361,12 +361,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     prompt: lastPrompt
                 };
 
-                // Show feedback modal after user has time to read the result
+                // Progressive feedback timing - less intrusive over time
+                // First time: 30s, second: 60s, third: 120s, etc.
+                const feedbackCount = parseInt(localStorage.getItem('shurahub_feedback_count') || '0');
+                const baseDelay = 30000; // 30 seconds
+                const delayMultiplier = Math.pow(2, Math.min(feedbackCount, 4)); // Cap at 16x (8 minutes)
+                const feedbackDelay = baseDelay * delayMultiplier;
+
                 setTimeout(() => {
                     if (typeof showFeedbackModal === 'function') {
                         showFeedbackModal();
+                        // Increment feedback count for next time
+                        localStorage.setItem('shurahub_feedback_count', String(feedbackCount + 1));
                     }
-                }, 30000); // 30 seconds - gives ample time to read
+                }, feedbackDelay);
 
                 setWorkingState(false);
                 setStatus('Ready for the next decision.');

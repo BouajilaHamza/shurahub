@@ -153,6 +153,38 @@ RULES:
                 synthesizer_history = [{'role': 'user', 'content': synthesis_prompt}]
                 synthesizer_response, synthesizer_model_res = await stream_stage(synthesizer_model_req, synthesizer_history, "synthesizer")
 
+                # Generate contextual follow-up suggestions from the council
+                try:
+                    followup_prompt = f'''Based on this debate about: "{user_message}"
+                    
+The verdict was: {synthesizer_response[:300] if synthesizer_response else "provided"}
+
+Generate exactly 3 SHORT follow-up questions the user might want to ask next. Each question should be:
+- Directly relevant to their decision
+- Actionable and specific
+- Under 60 characters
+
+Format:
+1. [question]
+2. [question]  
+3. [question]'''
+                    
+                    followup_response, _ = await ai_service.get_bot_response(
+                        synthesizer_model_req,
+                        [{'role': 'user', 'content': followup_prompt}]
+                    )
+                    
+                    # Parse and send follow-up suggestions
+                    import re
+                    suggestions = re.findall(r'\d\.\s*(.+)', followup_response)[:3]
+                    if suggestions:
+                        await websocket.send_json({
+                            "type": "followups",
+                            "suggestions": [s.strip()[:60] for s in suggestions]
+                        })
+                except Exception as followup_error:
+                    print(f"Follow-up generation failed (non-critical): {followup_error}")
+
                 # Save to conversation context for follow-up questions
                 conversation_context.append({
                     'question': user_message,
