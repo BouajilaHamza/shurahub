@@ -42,6 +42,9 @@ async def websocket_endpoint(
     await websocket.accept()
     print(f"WebSocket connection accepted for {'user ' + user_id if user_id else 'guest mode'}")
 
+    # Maintain conversation context for the session
+    conversation_context = []  # Stores summaries of past debates for context
+
     try:
         while True:
             try:
@@ -85,6 +88,14 @@ async def websocket_endpoint(
 
                 # --- The Debate ---
                 
+                # Build context from previous debates (for follow-up questions)
+                context_summary = ""
+                if conversation_context:
+                    context_summary = "\n\nPREVIOUS CONVERSATION CONTEXT:\n" + "\n".join([
+                        f"- Q: {ctx['question'][:100]}... → A: {ctx['answer'][:100]}..."
+                        for ctx in conversation_context[-3:]  # Keep last 3 debates for context
+                    ])
+                
                 # 1. The Opener
                 opener_model_req = models_to_use[0]
                 opener_system_prompt = f'''You are a debater in the Shurahub AI Council. Your role is to provide the OPENING argument.
@@ -93,11 +104,17 @@ RULES:
 - Be CONCISE. No long paragraphs.
 - Users want to SKIM, not read essays.
 - Each field has a character limit - respect it.
+- Focus ONLY on the user's question. Do not go off-topic.
 
 {ARGUMENT_FORMAT_INSTRUCTIONS}'''
+                
+                user_prompt = user_message
+                if context_summary:
+                    user_prompt = f"{user_message}{context_summary}"
+                
                 opener_history = [
                     {'role': 'system', 'content': opener_system_prompt},
-                    {'role': 'user', 'content': user_message}
+                    {'role': 'user', 'content': user_prompt}
                 ]
                 opener_response, opener_model_res = await stream_stage(opener_model_req, opener_history, "opener")
 
@@ -135,6 +152,12 @@ RULES:
 {SYNTHESIS_FORMAT_INSTRUCTIONS}'''
                 synthesizer_history = [{'role': 'user', 'content': synthesis_prompt}]
                 synthesizer_response, synthesizer_model_res = await stream_stage(synthesizer_model_req, synthesizer_history, "synthesizer")
+
+                # Save to conversation context for follow-up questions
+                conversation_context.append({
+                    'question': user_message,
+                    'answer': synthesizer_response[:200] if synthesizer_response else 'No answer'
+                })
 
                 # --- Log debate to the database ---
                 if user_id:

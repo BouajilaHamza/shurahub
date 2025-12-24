@@ -160,15 +160,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function parseSynthesis(text) {
+        // Strip the "**Final Verdict:**" prefix if present
+        let cleanText = text.replace(/^\*\*Final Verdict:\*\*\s*/i, '').trim();
+
         const sections = {
             summary: [],
             consensus: '',
             breakdown: '',
             citations: '',
-            rawText: text
+            rawText: cleanText
         };
 
-        const lines = text.split('\n');
+        const lines = cleanText.split('\n');
         let currentSection = '';
 
         lines.forEach(line => {
@@ -198,9 +201,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Fallback: if no consensus found, use the first substantial line
-        if (!sections.consensus && text.trim().length > 20) {
+        if (!sections.consensus && cleanText.trim().length > 20) {
             const firstGoodLine = lines.find(l => l.trim().length > 30 && !l.trim().startsWith('-'));
-            if (firstGoodLine) sections.consensus = firstGoodLine.trim();
+            if (firstGoodLine) sections.consensus = firstGoodLine.trim().substring(0, 200);
+        }
+
+        // Fallback: if still no summary, create one from the content
+        if (sections.summary.length === 0 && cleanText.length > 50) {
+            sections.summary.push('Analysis complete - see details below');
         }
 
         return sections;
@@ -530,6 +538,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeInput) activeInput.value = '';
         promptInput.value = '';
 
+        // Hide reply banner if showing
+        const replyBanner = document.getElementById('reply-context-banner');
+        if (replyBanner) replyBanner.classList.add('hidden');
+
         resizePrompt();
         setWorkingState(true);
         setStatus('Council drafting your verdict...', true);
@@ -749,6 +761,68 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // Reply to specific argument button handler (event delegation)
+    document.body.addEventListener('click', (e) => {
+        const replyBtn = e.target.closest('.reply-to-argument-btn');
+        if (replyBtn) {
+            const card = replyBtn.closest('.debate-node');
+            if (card) {
+                // Get the model name and claim from the card
+                const modelName = card.querySelector('.model-name')?.textContent || 'AI';
+                const claim = card.querySelector('.claim-text')?.textContent || '';
+
+                // Pre-fill the input with a reply context
+                const activeInput = chatPromptInput || emptyPromptInput;
+                if (activeInput) {
+                    // Create a reply prompt that references the specific argument
+                    const shortClaim = claim.substring(0, 50) + (claim.length > 50 ? '...' : '');
+                    const replyPrefix = `Regarding "${shortClaim}": `;
+                    activeInput.value = replyPrefix;
+                    activeInput.focus();
+
+                    // Move cursor to end
+                    activeInput.setSelectionRange(replyPrefix.length, replyPrefix.length);
+
+                    // Show the reply context banner
+                    const replyBanner = document.getElementById('reply-context-banner');
+                    const replyContextText = document.querySelector('.reply-context-text');
+                    if (replyBanner && replyContextText) {
+                        replyContextText.textContent = `Replying to: "${shortClaim}"`;
+                        replyBanner.classList.remove('hidden');
+                    }
+
+                    // Scroll to input
+                    activeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    resizePrompt();
+                    updateSendState();
+                }
+            }
+        }
+    });
+
+    // Cancel reply button handler
+    const cancelReplyBtn = document.getElementById('cancel-reply-btn');
+    if (cancelReplyBtn) {
+        cancelReplyBtn.addEventListener('click', () => {
+            const replyBanner = document.getElementById('reply-context-banner');
+            if (replyBanner) replyBanner.classList.add('hidden');
+
+            const activeInput = chatPromptInput || emptyPromptInput;
+            if (activeInput) {
+                activeInput.value = '';
+                resizePrompt();
+                updateSendState();
+            }
+        });
+    }
+
+    // Hide reply banner after sending message
+    function hideReplyBanner() {
+        const replyBanner = document.getElementById('reply-context-banner');
+        if (replyBanner) replyBanner.classList.add('hidden');
+    }
 
     function adjustInputForKeyboard() {
         const inputContainer = document.querySelector('.chat-input-container');
@@ -1345,10 +1419,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn) {
             const prompt = btn.dataset.prompt;
             if (prompt) {
-                promptInput.value = prompt;
-                resizePrompt();
-                updateSendState();
-                sendMessage();
+                // Use the correct input based on current state
+                const activeInput = emptyPromptInput || chatPromptInput || promptInput;
+                if (activeInput) {
+                    activeInput.value = prompt;
+                    resizePrompt();
+                    updateSendState();
+                    sendMessage();
+                }
             }
         }
     });

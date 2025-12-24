@@ -138,10 +138,12 @@
                 <div class="chat-status" id="chat-status">Connected</div>
                 <div class="chat-messages" id="chat-messages">
                     <!-- Empty State -->
-                    <div id="empty-state" class="flex flex-col flex-grow items-center justify-center text-center px-4 max-w-md mx-auto">
+                    <div id="empty-state"
+                        class="flex flex-col flex-grow items-center justify-center text-center px-4 max-w-md mx-auto">
                         <div class="mb-8 w-full text-left">
                             <h2 class="text-3xl font-extrabold tracking-tight leading-tight mb-2">
-                                Ask the <span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Council</span>
+                                Ask the <span
+                                    class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Council</span>
                             </h2>
                             <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                                 Describe your dilemma. The AI council will debate the pros, cons, and nuances for you.
@@ -150,35 +152,45 @@
 
                         <div class="w-full space-y-6">
                             <div class="group">
-                                <label class="block text-sm font-semibold mb-2 text-left text-slate-900 dark:text-white" for="prompt-input">
+                                <label class="block text-sm font-semibold mb-2 text-left text-slate-900 dark:text-white"
+                                    for="prompt-input">
                                     What are you trying to decide?
                                 </label>
                                 <div class="relative">
                                     <textarea id="empty-prompt-input" rows="4"
                                         class="w-full bg-slate-50 dark:bg-card-dark border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-base focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none shadow-sm text-slate-900 dark:text-white placeholder-slate-400"
                                         placeholder="e.g., Should I quit my job to start a bakery, or stay for the promotion?"></textarea>
-                                    <div class="char-counter absolute bottom-3 right-3 text-xs text-slate-400 bg-white dark:bg-card-dark px-1 rounded">
+                                    <div
+                                        class="char-counter absolute bottom-3 right-3 text-xs text-slate-400 bg-white dark:bg-card-dark px-1 rounded">
                                         0/200
                                     </div>
                                 </div>
                             </div>
 
-                            <button id="empty-send-button" class="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 active:scale-[0.98] transition-all text-white font-bold text-lg py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-2 group">
+                            <button id="empty-send-button"
+                                class="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 active:scale-[0.98] transition-all text-white font-bold text-lg py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-2 group">
                                 <span class="send-button-text">Start Debate</span>
-                                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                <span
+                                    class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
                             </button>
 
                             <!-- Quick Start Prompts -->
                             <div class="grid grid-cols-1 gap-3 mt-6">
-                                <button class="quick-start-prompt flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left"
+                                <button
+                                    class="quick-start-prompt flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left"
                                     data-prompt="Should I quit my job to start a bakery, or stay for the promotion?">
                                     <span class="material-symbols-outlined text-primary text-xl">work</span>
-                                    <span class="prompt-text text-sm font-medium text-slate-700 dark:text-slate-300">Quit job for bakery or stay for promotion?</span>
+                                    <span
+                                        class="prompt-text text-sm font-medium text-slate-700 dark:text-slate-300">Quit
+                                        job for bakery or stay for promotion?</span>
                                 </button>
-                                <button class="quick-start-prompt flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left"
+                                <button
+                                    class="quick-start-prompt flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left"
                                     data-prompt="Should I take the job offer or stay at my current company?">
                                     <span class="material-symbols-outlined text-primary text-xl">compare_arrows</span>
-                                    <span class="prompt-text text-sm font-medium text-slate-700 dark:text-slate-300">Take the job offer or stay at current company?</span>
+                                    <span
+                                        class="prompt-text text-sm font-medium text-slate-700 dark:text-slate-300">Take
+                                        the job offer or stay at current company?</span>
                                 </button>
                             </div>
 
@@ -194,6 +206,17 @@
 
                 <!-- Input Area -->
                 <div class="chat-input-container" id="chat-input-container" style="display: none;">
+                    <!-- Reply Context Banner -->
+                    <div id="reply-context-banner"
+                        class="hidden mb-2 p-2 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                            <span class="material-symbols-outlined text-primary">reply</span>
+                            <span class="reply-context-text truncate max-w-[250px]">Replying to...</span>
+                        </div>
+                        <button id="cancel-reply-btn" class="text-slate-500 hover:text-red-500 transition-colors">
+                            <span class="material-symbols-outlined text-lg">close</span>
+                        </button>
+                    </div>
                     <div class="chat-input-wrapper">
                         <label class="input-label" for="chat-prompt-input">What are you trying to decide?</label>
                         <div class="chat-input">
@@ -241,15 +264,18 @@
             <div class="message-content w-full">
                 <!-- Golden Answer Summary Box (Visible at top of this result) -->
                 <div class="summary-box mb-6">
-                    <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-white dark:from-[#1e252e] dark:to-[#161c23] border border-primary/20 shadow-md">
+                    <div
+                        class="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-white dark:from-[#1e252e] dark:to-[#161c23] border border-primary/20 shadow-md">
                         <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
                         <div class="p-4">
                             <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
+                                <div
+                                    class="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
                                     <span class="material-symbols-outlined text-lg">auto_awesome</span>
                                     <span>Golden Answer</span>
                                 </div>
-                                <span class="confidence-pill bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">ANALYZING...</span>
+                                <span
+                                    class="confidence-pill bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">ANALYZING...</span>
                             </div>
                             <div class="summary-bullets space-y-2">
                                 <!-- Populated by JS -->
@@ -265,7 +291,8 @@
                 <!-- Main Question Heading (Matches original prompt) -->
                 <div class="debate-question mb-8">
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white leading-tight debate-title-text"></h2>
-                    <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] font-medium mt-3 uppercase tracking-wide">
+                    <div
+                        class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[10px] font-medium mt-3 uppercase tracking-wide">
                         <span class="bg-slate-200 dark:bg-white/10 px-2 py-1 rounded">Decision Analysis</span>
                         <span>•</span>
                         <span class="model-count">3 Models</span>
@@ -277,8 +304,9 @@
                 <!-- Debate Tree Layout -->
                 <div class="debate-tree relative flex flex-col gap-6">
                     <!-- Vertical Connector Line -->
-                    <div class="absolute left-[19px] top-4 bottom-0 w-[2px] bg-slate-200 dark:bg-white/10 rounded-full"></div>
-                    
+                    <div class="absolute left-[19px] top-4 bottom-0 w-[2px] bg-slate-200 dark:bg-white/10 rounded-full">
+                    </div>
+
                     <!-- Nodes will be injected here (Opener, Critiquer, etc.) -->
                     <div class="debate-nodes-container flex flex-col gap-6">
                         <div class="node-slot" data-role="opener"></div>
@@ -289,7 +317,8 @@
 
                 <!-- Feedback Trigger Button -->
                 <div class="feedback-trigger mt-6 flex justify-center" hidden>
-                    <button class="open-feedback-modal flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 text-sm font-medium text-slate-700 dark:text-slate-300 hover:border-primary transition-all">
+                    <button
+                        class="open-feedback-modal flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 text-sm font-medium text-slate-700 dark:text-slate-300 hover:border-primary transition-all">
                         <span class="material-symbols-outlined text-lg text-primary">rate_review</span>
                         <span>Rate this verdict</span>
                     </button>
@@ -303,17 +332,20 @@
                     </div>
                     <div class="follow-up-buttons flex flex-col gap-2">
                         <!-- Default follow-ups, will be replaced by JS with context-aware ones -->
-                        <button class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
+                        <button
+                            class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
                             data-followup="What are the main risks I should consider?">
                             <span class="material-symbols-outlined text-primary text-lg">warning</span>
                             <span>What are the main risks I should consider?</span>
                         </button>
-                        <button class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
+                        <button
+                            class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
                             data-followup="How can I validate this decision before committing?">
                             <span class="material-symbols-outlined text-primary text-lg">fact_check</span>
                             <span>How can I validate this decision before committing?</span>
                         </button>
-                        <button class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
+                        <button
+                            class="follow-up-btn flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-card-dark/50 hover:border-primary transition-all text-left text-sm text-slate-700 dark:text-slate-300"
                             data-followup="What would you recommend as the next steps?">
                             <span class="material-symbols-outlined text-primary text-lg">arrow_forward</span>
                             <span>What would you recommend as the next steps?</span>
@@ -328,31 +360,42 @@
     <template id="argument-card-template">
         <div class="relative pl-12 group debate-node">
             <!-- Connector Dot -->
-            <div class="connector-dot absolute left-[11px] top-6 w-[18px] h-[18px] rounded-full border-[3px] border-white dark:border-background-dark bg-primary shadow-sm z-10"></div>
-            
+            <div
+                class="connector-dot absolute left-[11px] top-6 w-[18px] h-[18px] rounded-full border-[3px] border-white dark:border-background-dark bg-primary shadow-sm z-10">
+            </div>
+
             <!-- Connector Line Extension (For indented responses) -->
-            <div class="connector-elbow absolute left-[19px] top-[-24px] bottom-auto h-[50px] w-8 border-l-[2px] border-b-[2px] border-slate-200 dark:border-white/10 rounded-bl-xl z-0 hidden"></div>
+            <div
+                class="connector-elbow absolute left-[19px] top-[-24px] bottom-auto h-[50px] w-8 border-l-[2px] border-b-[2px] border-slate-200 dark:border-white/10 rounded-bl-xl z-0 hidden">
+            </div>
 
             <!-- Card -->
-            <div class="relative bg-white dark:bg-card-dark rounded-xl shadow-sm border border-slate-200 dark:border-white/5 overflow-hidden transition-all hover:shadow-md">
+            <div
+                class="relative bg-white dark:bg-card-dark rounded-xl shadow-sm border border-slate-200 dark:border-white/5 overflow-hidden transition-all hover:shadow-md">
                 <div class="stance-indicator absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
                 <div class="p-4">
                     <!-- Card Header -->
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex flex-col">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="stance-label text-[10px] font-bold uppercase tracking-wider text-primary">Stance: Unknown</span>
+                                <span
+                                    class="stance-label text-[10px] font-bold uppercase tracking-wider text-primary">Stance:
+                                    Unknown</span>
                                 <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                                <span class="model-name text-[10px] font-medium text-slate-500 dark:text-slate-400">Model Name</span>
+                                <span
+                                    class="model-name text-[10px] font-medium text-slate-500 dark:text-slate-400">Model
+                                    Name</span>
                             </div>
                             <h3 class="claim-text font-bold text-base text-slate-900 dark:text-white leading-snug"></h3>
                         </div>
                     </div>
-                    
+
                     <!-- Card Body (Progressive Disclosure) -->
                     <div class="argument-details overflow-hidden transition-all">
-                        <div class="explanation-text text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-3"></div>
-                        <div class="extended-details hidden py-3 border-t border-slate-100 dark:border-white/5 space-y-3">
+                        <div class="explanation-text text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+                        </div>
+                        <div
+                            class="extended-details hidden py-3 border-t border-slate-100 dark:border-white/5 space-y-3">
                             <div class="evidence-section">
                                 <span class="text-[10px] font-bold uppercase text-slate-400">Supporting Evidence</span>
                                 <p class="evidence-text text-sm mt-1"></p>
@@ -366,11 +409,17 @@
 
                     <!-- Card Footer -->
                     <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5">
-                        <div class="avatars-agree flex items-center -space-x-2">
-                            <!-- Injected by JS -->
+                        <div class="flex items-center gap-3">
+                            <button
+                                class="reply-to-argument-btn flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-lg">reply</span>
+                                <span>Reply</span>
+                            </button>
                         </div>
-                        <button class="expand-argument-btn flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
-                            <span class="btn-label">Expand</span> <span class="material-symbols-outlined text-lg">expand_more</span>
+                        <button
+                            class="expand-argument-btn flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+                            <span class="btn-label">Expand</span> <span
+                                class="material-symbols-outlined text-lg">expand_more</span>
                         </button>
                     </div>
                 </div>
@@ -401,36 +450,50 @@
     </div>
 
     <!-- Feedback Modal Popup -->
-    <div id="feedback-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl max-w-sm w-[90%] mx-auto p-6 animate-[scaleIn_0.2s_ease-out]">
+    <div id="feedback-modal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div
+            class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl max-w-sm w-[90%] mx-auto p-6 animate-[scaleIn_0.2s_ease-out]">
             <div class="text-center mb-4">
                 <span class="material-symbols-outlined text-4xl text-primary mb-2">rate_review</span>
                 <h3 class="text-lg font-bold text-slate-900 dark:text-white">Was this verdict on point?</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Your feedback helps improve the council.</p>
             </div>
-            
+
             <div class="feedback-rating-options flex justify-center gap-3 mb-4">
-                <button class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all" data-rating="helpful">
+                <button
+                    class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all"
+                    data-rating="helpful">
                     <span class="text-2xl">👍</span>
                     <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Helpful</span>
                 </button>
-                <button class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all" data-rating="mixed">
+                <button
+                    class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all"
+                    data-rating="mixed">
                     <span class="text-2xl">😐</span>
                     <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Mixed</span>
                 </button>
-                <button class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all" data-rating="off_target">
+                <button
+                    class="feedback-option flex flex-col items-center gap-1 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 transition-all"
+                    data-rating="off_target">
                     <span class="text-2xl">👎</span>
                     <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Off target</span>
                 </button>
             </div>
-            
-            <textarea id="feedback-note" rows="2" class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/10 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary outline-none mb-4 text-slate-900 dark:text-white" placeholder="Quick note for the council (optional)"></textarea>
-            
+
+            <textarea id="feedback-note" rows="2"
+                class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/10 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary outline-none mb-4 text-slate-900 dark:text-white"
+                placeholder="Quick note for the council (optional)"></textarea>
+
             <div class="flex gap-3">
-                <button id="feedback-skip" class="flex-1 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">Maybe later</button>
-                <button id="feedback-submit" class="flex-1 py-2.5 rounded-lg bg-primary text-white text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50" disabled>Send</button>
+                <button id="feedback-skip"
+                    class="flex-1 py-2.5 rounded-lg border border-slate-200 dark:border-white/10 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">Maybe
+                    later</button>
+                <button id="feedback-submit"
+                    class="flex-1 py-2.5 rounded-lg bg-primary text-white text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50"
+                    disabled>Send</button>
             </div>
-            
+
             <p id="feedback-status" class="text-xs text-center text-slate-500 mt-3" role="status"></p>
         </div>
     </div>
